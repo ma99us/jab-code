@@ -1,11 +1,11 @@
-package org.maggus.jab;
+package ca.ma99us.jab;
 
+import ca.ma99us.jab.dummy.DummyDTO;
+import ca.ma99us.jab.headers.ChecksumHeader;
 import org.junit.Assert;
 import org.junit.Test;
-import org.maggus.jab.headers.CryptoChecksumHeader;
-import org.maggus.jab.headers.ChecksumHeader;
-import org.maggus.jab.headers.JabHeader;
-import org.maggus.jab.dummy.DummyDTO;
+import ca.ma99us.jab.headers.CryptoChecksumHeader;
+import ca.ma99us.jab.headers.JabHeader;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

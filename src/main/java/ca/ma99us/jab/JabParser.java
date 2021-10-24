@@ -1,4 +1,4 @@
-package org.maggus.jab;
+package ca.ma99us.jab;
 
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
-import org.maggus.jab.headers.JabHeader;
+import ca.ma99us.jab.headers.JabHeader;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;

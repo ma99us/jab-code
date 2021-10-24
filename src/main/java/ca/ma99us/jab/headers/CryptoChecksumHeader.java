@@ -1,8 +1,7 @@
-package org.maggus.jab.headers;
+package ca.ma99us.jab.headers;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import ca.ma99us.jab.JabParser;
 import lombok.*;
-import org.maggus.jab.JabParser;
 
 import java.io.IOException;
 import java.util.HashMap;

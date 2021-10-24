@@ -1,6 +1,6 @@
-package org.maggus.jab.headers;
+package ca.ma99us.jab.headers;
 
-import org.maggus.jab.JabParser;
+import ca.ma99us.jab.JabParser;
 
 import java.io.IOException;
 

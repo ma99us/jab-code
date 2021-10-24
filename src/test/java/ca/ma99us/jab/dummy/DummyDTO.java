@@ -1,4 +1,4 @@
-package org.maggus.jab.dummy;
+package ca.ma99us.jab.dummy;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package org.maggus.jab.headers;
+package ca.ma99us.jab.headers;
 
 import java.io.IOException;
 
