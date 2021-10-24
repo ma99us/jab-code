@@ -36,7 +36,7 @@ public class JabParserTest {
     @Test
     public void findJabBarcodeFormatIdTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(false, false);
-        ChecksumHeader header = new ChecksumHeader();
+        ChecksumHeader<DummyDTO> header = new ChecksumHeader<DummyDTO>();
 
         JabParser jabParser = new JabParser();
         Assert.assertNull(jabParser.findJabFormatId(null));
@@ -69,7 +69,7 @@ public class JabParserTest {
         String sBarcode = null, csBarcode = null;
         try {
             sBarcode = jabParser.objectToJab(null, dto);
-            csBarcode = jabParser.objectToJab(new ChecksumHeader(), dto);
+            csBarcode = jabParser.objectToJab(new ChecksumHeader<DummyDTO>(), dto);
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail();
@@ -136,7 +136,7 @@ public class JabParserTest {
     @Test
     public void checksumHeaderBarcodeTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(false, false);
-        ChecksumHeader header = new ChecksumHeader();
+        ChecksumHeader<DummyDTO> header = new ChecksumHeader<DummyDTO>();
 
         barcodeTest(header, ChecksumHeader.class, dto, DummyDTO.class);
     }
@@ -144,7 +144,7 @@ public class JabParserTest {
     @Test
     public void checksumHeaderCompositionDtoBarcodeTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(true, false);
-        ChecksumHeader header = new ChecksumHeader();
+        ChecksumHeader<DummyDTO> header = new ChecksumHeader<DummyDTO>();
 
         barcodeTest(header, ChecksumHeader.class, dto, DummyDTO.class);
     }
@@ -152,7 +152,7 @@ public class JabParserTest {
     @Test
     public void checksumHeaderCollectionsDtoBarcodeTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(false, true);
-        ChecksumHeader header = new ChecksumHeader();
+        ChecksumHeader<DummyDTO> header = new ChecksumHeader<DummyDTO>();
 
         barcodeTest(header, ChecksumHeader.class, dto, DummyDTO.class);
     }
@@ -160,7 +160,7 @@ public class JabParserTest {
     @Test
     public void checksumHeaderCollectionsCompositionDtoBarcodeTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
-        ChecksumHeader header = new ChecksumHeader();
+        ChecksumHeader<DummyDTO> header = new ChecksumHeader<DummyDTO>();
 
         barcodeTest(header, ChecksumHeader.class, dto, DummyDTO.class);
     }
@@ -168,7 +168,7 @@ public class JabParserTest {
     @Test
     public void encryptedChecksumHeaderCollectionsCompositionDtoBarcodeTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
-        CryptoChecksumHeader header = new CryptoChecksumHeader();
+        CryptoChecksumHeader<DummyDTO> header = new CryptoChecksumHeader<DummyDTO>();
         CryptoChecksumHeader.getKeys().encryptKey("SomeSuperSecretKey", "SomeSalt");
 
         barcodeTest(header, CryptoChecksumHeader.class, dto, DummyDTO.class);

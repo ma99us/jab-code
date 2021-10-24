@@ -9,18 +9,18 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper=false)
-public class ChecksumHeader extends NoNullHeader {
+public class ChecksumHeader<P> extends NoNullHeader<P> {
     private Long checksum;
 
     @Override
-    public void populate(Object dto, String payload) {
+    public void populate(P dto, String payload) {
         //TODO: maybe use original DTO to get the checksum rather then payload barcode portion string?
         JabParser.Hasher hasher = new JabParser.Hasher();
         checksum = hasher.hashString(payload);
     }
 
     @Override
-    public void validate(Object dto, String payload) throws IOException {
+    public void validate(P dto, String payload) throws IOException {
         //TODO: maybe use resulting DTO to get the checksum rather then payload barcode portion string?
         JabParser.Hasher hasher = new JabParser.Hasher();
         long hash = hasher.hashString(payload);

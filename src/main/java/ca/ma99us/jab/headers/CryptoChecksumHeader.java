@@ -9,14 +9,14 @@ import java.util.Map;
 
 @Data
 @EqualsAndHashCode(callSuper=true)
-public class CryptoChecksumHeader extends ChecksumHeader {
+public class CryptoChecksumHeader<P> extends ChecksumHeader<P> {
     private Long keyId;
 
     @Getter
     private final static Keys keys = new Keys();
 
     @Override
-    public String obfuscate(Object dto, String payload) {
+    public String obfuscate(P dto, String payload) {
         // super shrinks 'null's
         payload = super.obfuscate(dto, payload);
 
@@ -27,14 +27,14 @@ public class CryptoChecksumHeader extends ChecksumHeader {
         keyId = keys.encryptKey.getKeyId();
 
         // encrypt the payload
-        String encrypted = new JabParser.Crypto().encryptString(payload, keys.encryptKey.getKeyWithSalt());
+        String encrypted = new JabParser.Crypto().encryptString(payload, keys.encryptKey.getKey());
 
         // wrap in "[", "]"
         return "[" + encrypted + "]";
     }
 
     @Override
-    public String deobfuscate(Object dto, String payload) throws IOException {
+    public String deobfuscate(P dto, String payload) throws IOException {
         // validate key id first
         Keys.CryptoKey key = keys.findKey(keyId);
         if (key == null) {
@@ -45,7 +45,7 @@ public class CryptoChecksumHeader extends ChecksumHeader {
         payload = payload.substring(1, payload.length() - 1);
 
         //decrypt payload
-        String decrypted = new JabParser.Crypto().decryptString(payload, key.getKeyWithSalt());
+        String decrypted = new JabParser.Crypto().decryptString(payload, key.getKey());
         if (!decrypted.startsWith("[") || !decrypted.endsWith("]")) {
             throw new IOException("Bad decrypted payload");
         }

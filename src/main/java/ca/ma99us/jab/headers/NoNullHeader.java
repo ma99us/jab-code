@@ -10,20 +10,20 @@ import lombok.Data;
  * Remove 'null's from json array string to make it a bit shorter
  */
 @Data
-public class NoNullHeader implements JabHeader {
+public class NoNullHeader<P> implements JabHeader<P> {
 
     @Override
-    public void populate(Object dto, String payload) {
+    public void populate(P dto, String payload) {
         // no-op
     }
 
     @Override
-    public void validate(Object dto, String payload) throws IOException {
+    public void validate(P dto, String payload) throws IOException {
         // no-op
     }
 
     @Override
-    public String obfuscate(Object dto, String payload) {
+    public String obfuscate(P dto, String payload) {
         // shrink the nulls
         Pattern regex = Pattern.compile("([\\[,])(null)([,\\]])");
         Matcher matcher = regex.matcher(payload);
@@ -35,7 +35,7 @@ public class NoNullHeader implements JabHeader {
     }
 
     @Override
-    public String deobfuscate(Object dto, String payload) throws IOException {
+    public String deobfuscate(P dto, String payload) throws IOException {
         // expand nulls back
         Pattern regex = Pattern.compile("([\\[,])([,\\]])");
         Matcher matcher = regex.matcher(payload);

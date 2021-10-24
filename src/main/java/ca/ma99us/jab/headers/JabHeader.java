@@ -2,37 +2,37 @@ package ca.ma99us.jab.headers;
 
 import java.io.IOException;
 
-public interface JabHeader {
+public interface JabHeader<P> {
 
     /**
      * Populate header state during barcode creation.
-     * @param dto
-     * @param payload
-     * @return
+     * @param dto java bean POJO
+     * @param payload serialized payload
      */
-    void populate(Object dto, String payload);
+    void populate(P dto, String payload);
 
     /**
      * Verify header state during barcode parsing
-     * @param dto
-     * @param payload
-     * @throws IOException
+     * @param dto java bean POJO
+     * @param payload serialized payload
+     * @throws IOException if validation fails
      */
-    void validate(Object dto, String payload) throws IOException;
+    void validate(P dto, String payload) throws IOException;
 
     /**
      * Modify Payload barcode portion during barcode creation.
-     * @param dto
+     * @param dto java bean POJO
      * @param payload original payload barcode string
      * @return modified payload barcode string
      */
-    String obfuscate(Object dto, String payload);
+    String obfuscate(P dto, String payload);
 
     /**
      * Modify Payload barcode portion during barcode parsing.
-     * @param dto
+     * @param dto java bean POJO
      * @param payload obfuscated payload barcode string
      * @return modified payload barcode string
+     * @throws IOException if validation/decryption fails
      */
-    String deobfuscate(Object dto, String payload) throws IOException ;
+    String deobfuscate(P dto, String payload) throws IOException;
 }

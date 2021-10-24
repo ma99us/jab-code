@@ -44,7 +44,7 @@ public class JabParser {
     /**
      * Quick check that barcode looks like a correct format
      *
-     * @param barcode
+     * @param barcode string to check
      * @return possible JabBarcode, and parsing could be attempted
      */
     public boolean isPossibleJab(String barcode) {
