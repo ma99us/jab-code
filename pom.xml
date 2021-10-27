@@ -5,7 +5,7 @@
 
     <groupId>ca.ma99us</groupId>
     <artifactId>jab-code</artifactId>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
 
     <name>JAB Code</name>
     <description>A library to generate secure and compact barcodes data from POJO java beans</description>
@@ -49,6 +49,39 @@
             <artifactId>jackson-annotations</artifactId>
             <version>2.13.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.iot.cbor</groupId>
+            <artifactId>cbor</artifactId>
+            <version>0.01.02</version>
+        </dependency>
+        <dependency>
+            <groupId>de.undercouch</groupId>
+            <artifactId>bson4jackson</artifactId>
+            <version>2.12.0</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.mongodb</groupId>-->
+<!--            <artifactId>bson</artifactId>-->
+<!--            <version>4.3.3</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>4.3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>msgpack</artifactId>
+            <version>0.6.12</version>
+        </dependency>
+        <dependency>
+            <groupId>org.msgpack</groupId>
+            <artifactId>jackson-dataformat-msgpack</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+
+        <!-- TESTING -->
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

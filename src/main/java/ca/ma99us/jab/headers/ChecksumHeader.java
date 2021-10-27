@@ -1,29 +1,32 @@
 package ca.ma99us.jab.headers;
 
+import ca.ma99us.jab.JabHasher;
 import ca.ma99us.jab.JabParser;
+import lombok.Data;
 
 import java.io.IOException;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
+/**
+ * Calculates POJO payload checksum and adds it to the header fields
+ */
 @Data
-@EqualsAndHashCode(callSuper=false)
-public class ChecksumHeader<P> extends NoNullHeader<P> {
+public class ChecksumHeader<P> extends AbstractHeader<P> {
     private Long checksum;
 
     @Override
-    public void populate(P dto, String payload) {
-        //TODO: maybe use original DTO to get the checksum rather then payload barcode portion string?
-        JabParser.Hasher hasher = new JabParser.Hasher();
-        checksum = hasher.hashString(payload);
+    public void populate(P dto) throws IOException {
+        // just checksum of the DTO JSON values array string. Ignore the payload string.
+        JabParser parser = new JabParser();
+        JabHasher hasher = new JabHasher();
+        checksum = hasher.hashString(parser.objectValuesToJsonArrayString(dto));
     }
 
     @Override
-    public void validate(P dto, String payload) throws IOException {
-        //TODO: maybe use resulting DTO to get the checksum rather then payload barcode portion string?
-        JabParser.Hasher hasher = new JabParser.Hasher();
-        long hash = hasher.hashString(payload);
+    public void validate(P dto) throws IOException {
+        // just checksum of the DTO JSON values array string. Ignore the payload string.
+        JabParser parser = new JabParser();
+        JabHasher hasher = new JabHasher();
+        long hash = hasher.hashString(parser.objectValuesToJsonArrayString(dto));
         if (checksum != hash) {
             throw new IOException("Barcode checksum mismatch; expected " + checksum + ", but got " + hash);
         }

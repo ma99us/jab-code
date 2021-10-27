@@ -2,10 +2,9 @@ package ca.ma99us.jab;
 
 import ca.ma99us.jab.dummy.DummyDTO;
 import ca.ma99us.jab.headers.ChecksumHeader;
+import ca.ma99us.jab.headers.JabHeader;
 import org.junit.Assert;
 import org.junit.Test;
-import ca.ma99us.jab.headers.CryptoChecksumHeader;
-import ca.ma99us.jab.headers.JabHeader;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -101,77 +100,48 @@ public class JabParserTest {
     public void basicBarcodeTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(false, false);
 
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        Map<String, Object> objData = objectMapper.convertValue(dto, LinkedHashMap.class);
+        barcodeTest(null, null, dto, DummyDTO.class);
+    }
+
+    @Test
+    public void compositionDtoBarcodeTest() {
+        DummyDTO dto = DummyDTO.makeDummyDTO(true, false);
+
+        barcodeTest(null, null, dto, DummyDTO.class);
+    }
+
+    @Test
+    public void collectionsDtoBarcodeTest() {
+        DummyDTO dto = DummyDTO.makeDummyDTO(false, true);
+
+        barcodeTest(null, null, dto, DummyDTO.class);
+    }
+
+    @Test
+    public void collectionsCompositionDtoBarcodeTest() {
+        DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
+
+        barcodeTest(null, null, dto, DummyDTO.class);
+    }
+
+    @Test
+    public void collectionsCompositionDtoSchemaTest() {
+        DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
 
         JabParser jabParser = new JabParser();
 
         // generate barcode
         String barcode = null;
         try {
-            barcode = jabParser.objectToJab(null, dto);
+            barcode = jabParser.objectToJabSchema(null, dto);
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail();
         }
 
-        System.out.println(barcode);
         Assert.assertNotNull(barcode);
-        Assert.assertTrue(barcode.startsWith(JabParser.PREFIX + JabParser.DELIMITER));
-
-        // parse it back
-        DummyDTO res = null;
-        try {
-            res = jabParser.jabToObject(barcode, null, DummyDTO.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-            Assert.fail();
-        }
-
-        System.out.println(res);
-        Assert.assertNotNull(res);
-        Assert.assertEquals(dto, res);
-    }
-
-    @Test
-    public void checksumHeaderBarcodeTest() {
-        DummyDTO dto = DummyDTO.makeDummyDTO(false, false);
-        ChecksumHeader<DummyDTO> header = new ChecksumHeader<DummyDTO>();
-
-        barcodeTest(header, ChecksumHeader.class, dto, DummyDTO.class);
-    }
-
-    @Test
-    public void checksumHeaderCompositionDtoBarcodeTest() {
-        DummyDTO dto = DummyDTO.makeDummyDTO(true, false);
-        ChecksumHeader<DummyDTO> header = new ChecksumHeader<DummyDTO>();
-
-        barcodeTest(header, ChecksumHeader.class, dto, DummyDTO.class);
-    }
-
-    @Test
-    public void checksumHeaderCollectionsDtoBarcodeTest() {
-        DummyDTO dto = DummyDTO.makeDummyDTO(false, true);
-        ChecksumHeader<DummyDTO> header = new ChecksumHeader<DummyDTO>();
-
-        barcodeTest(header, ChecksumHeader.class, dto, DummyDTO.class);
-    }
-
-    @Test
-    public void checksumHeaderCollectionsCompositionDtoBarcodeTest() {
-        DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
-        ChecksumHeader<DummyDTO> header = new ChecksumHeader<DummyDTO>();
-
-        barcodeTest(header, ChecksumHeader.class, dto, DummyDTO.class);
-    }
-
-    @Test
-    public void encryptedChecksumHeaderCollectionsCompositionDtoBarcodeTest() {
-        DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
-        CryptoChecksumHeader<DummyDTO> header = new CryptoChecksumHeader<DummyDTO>();
-        CryptoChecksumHeader.getKeys().encryptKey("SomeSuperSecretKey", "SomeSalt");
-
-        barcodeTest(header, CryptoChecksumHeader.class, dto, DummyDTO.class);
+        System.out.println("schema: \"" + barcode + "\"");
+        System.out.println(dto);
     }
 
     @Test
@@ -179,8 +149,8 @@ public class JabParserTest {
         // input shorter then the output
         String sStr = "short string", sStr1 = "short str1ng";
 
-        byte[] rBytes = new JabParser.Hasher().wrapBytes(sStr.getBytes(StandardCharsets.UTF_8), 256);
-        byte[] rBytes1 = new JabParser.Hasher().wrapBytes(sStr1.getBytes(StandardCharsets.UTF_8), 256);
+        byte[] rBytes = new JabHasher().wrapBytes(sStr.getBytes(StandardCharsets.UTF_8), 256);
+        byte[] rBytes1 = new JabHasher().wrapBytes(sStr1.getBytes(StandardCharsets.UTF_8), 256);
 
         Assert.assertNotNull(rBytes);
         Assert.assertEquals(256, rBytes.length);
@@ -190,15 +160,15 @@ public class JabParserTest {
         sStr = "some very long string to get bytes from for wrapping into shorter buffer";
         sStr1 = "some very 1ong string to get bytes from for wrapping into shorter buffer";
 
-        rBytes = new JabParser.Hasher().wrapBytes(sStr.getBytes(StandardCharsets.UTF_8), 8);
-        rBytes1 = new JabParser.Hasher().wrapBytes(sStr1.getBytes(StandardCharsets.UTF_8), 8);
+        rBytes = new JabHasher().wrapBytes(sStr.getBytes(StandardCharsets.UTF_8), 8);
+        rBytes1 = new JabHasher().wrapBytes(sStr1.getBytes(StandardCharsets.UTF_8), 8);
 
         Assert.assertNotNull(rBytes);
         Assert.assertEquals(8, rBytes.length);
         Assert.assertNotEquals(rBytes, rBytes1);
     }
 
-    private <H extends JabHeader, P> P barcodeTest(H header, Class<H> hClass, P dto, Class<P> pClass) {
+    private <H extends JabHeader<P>, P> P barcodeTest(H header, Class<H> hClass, P dto, Class<P> pClass) {
         JabParser jabParser = new JabParser();
 
         // generate barcode
@@ -226,30 +196,6 @@ public class JabParserTest {
         System.out.println(res);
         Assert.assertNotNull(res);
         Assert.assertEquals(dto, res);
-
-        // alter the barcode!
-        int length = barcode.length();
-        int p0 = barcode.lastIndexOf("[");
-        Assert.assertTrue(p0 > 0);
-        int i = p0 + (int) (Math.random() * (length - p0));
-        StringBuilder sb = new StringBuilder(barcode);
-        char c = sb.charAt(i);
-        c = c == 'A' ? 'B' : 'A';
-        sb.setCharAt(i, c);
-        String altBarcode = sb.toString();
-        Assert.assertNotEquals(barcode, altBarcode);
-
-        // try to decode it again (it should fail!)
-        Object noRes = null;
-        try {
-            noRes = jabParser.jabToObject(altBarcode, hClass, pClass);
-            // should not get here!
-            Assert.fail();
-        } catch (IOException e) {
-            // expected exception
-            System.out.println("Expected exception: " + e.getMessage());
-        }
-        Assert.assertNull(noRes);
 
         return res;
     }

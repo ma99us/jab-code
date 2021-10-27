@@ -7,32 +7,30 @@ public interface JabHeader<P> {
     /**
      * Populate header state during barcode creation.
      * @param dto java bean POJO
-     * @param payload serialized payload
+     * @throws IOException if header creation fails
      */
-    void populate(P dto, String payload);
+    void populate(P dto) throws IOException;
 
     /**
      * Verify header state during barcode parsing
      * @param dto java bean POJO
-     * @param payload serialized payload
-     * @throws IOException if validation fails
+     * @throws IOException if header validation fails
      */
-    void validate(P dto, String payload) throws IOException;
+    void validate(P dto) throws IOException;
 
     /**
      * Modify Payload barcode portion during barcode creation.
-     * @param dto java bean POJO
-     * @param payload original payload barcode string
-     * @return modified payload barcode string
+     * @param payload original payload barcode bytes
+     * @return modified payload barcode bytes
+     * @throws IOException if compression/encryption fails
      */
-    String obfuscate(P dto, String payload);
+    byte[] obfuscate(byte[] payload) throws IOException;
 
     /**
      * Modify Payload barcode portion during barcode parsing.
-     * @param dto java bean POJO
-     * @param payload obfuscated payload barcode string
-     * @return modified payload barcode string
+     * @param payload obfuscated payload barcode bytes
+     * @return modified payload barcode bytes
      * @throws IOException if validation/decryption fails
      */
-    String deobfuscate(P dto, String payload) throws IOException;
+    byte[] deobfuscate(byte[] payload) throws IOException;
 }

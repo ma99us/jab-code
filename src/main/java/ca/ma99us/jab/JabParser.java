@@ -1,20 +1,18 @@
 package ca.ma99us.jab;
 
 
+import ca.ma99us.jab.headers.JabHeader;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
-import ca.ma99us.jab.headers.JabHeader;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,7 +28,7 @@ import java.util.regex.Pattern;
 public class JabParser {
     public static final String PREFIX = "JAB";
     public static final String DELIMITER = "|";
-    private static final Hasher hasher = new Hasher();
+    private static final JabHasher hasher = new JabHasher();
     @Getter
     private final Formats formats = new Formats();
 
@@ -38,7 +36,7 @@ public class JabParser {
 
     private final ObjectMapper mapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-//            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
             ;
 
     /**
@@ -84,20 +82,60 @@ public class JabParser {
         }
     }
 
-    public <H extends JabHeader, P> String objectToJab(H header, P payload) throws IOException {
+    public <H extends JabHeader<P>, P> String objectToJab(H header, P payload) throws IOException {
         StringBuilder sb = new StringBuilder();
 
         sb.append(PREFIX);
         sb.append(DELIMITER);
         sb.append(new Formats.JabFormat<H, P>(header, payload).getFormatId());
         sb.append(DELIMITER);
-        String payloadStr = objectValuesToJsonArrayString(payload);
+        String payloadStr = unwrap(objectValuesToJsonArrayString(payload));
         if (header != null) {
             // populate the header
-            header.populate(payload, payloadStr);
+            header.populate(payload);
             // encrypt the payload
-            payloadStr = header.obfuscate(payload, payloadStr);
+            payloadStr = new String(header.obfuscate(payloadStr.getBytes(StandardCharsets.UTF_8)));
             sb.append(objectValuesToJsonArrayString(header));
+        }
+        sb.append(wrap(payloadStr) );
+
+        return sb.toString();
+    }
+
+    public <H extends JabHeader<P>, P> byte[] objectToJabBytes(H header, P payload) throws IOException {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(PREFIX);
+        sb.append(DELIMITER);
+        sb.append(new Formats.JabFormat<H, P>(header, payload).getFormatId());
+        sb.append(DELIMITER);
+        byte[] payloadBytes = unwrap(objectValuesToJsonArrayString(payload)).getBytes(StandardCharsets.UTF_8);
+        if (header != null) {
+            // populate the header
+            header.populate(payload);
+            // encrypt the payload
+            payloadBytes = header.obfuscate(payloadBytes);
+            sb.append(objectValuesToJsonArrayString(header));
+        }
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        os.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+        os.write("[".getBytes(StandardCharsets.UTF_8));
+        os.write(payloadBytes);
+        os.write("]".getBytes(StandardCharsets.UTF_8));
+
+        return os.toByteArray();
+    }
+
+    public <H extends JabHeader<P>, P> String objectToJabSchema(H header, P payload) throws IOException {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(PREFIX);
+        sb.append(DELIMITER);
+        sb.append("format id");
+        sb.append(DELIMITER);
+        String payloadStr = objectFieldNamesToJsonArrayString(payload);
+        if (header != null) {
+            sb.append(objectFieldNamesToJsonArrayString(header));
         }
         sb.append(payloadStr);
 
@@ -116,7 +154,7 @@ public class JabParser {
         return jabToObject(barcode, format.getHeaderClass(), format.getPayloadClass());
     }
 
-    public <H extends JabHeader, P> P jabToObject(String barcode, Class<H> headerClass, Class<P> payloadClass) throws IOException {
+    public <H extends JabHeader<P>, P> P jabToObject(String barcode, Class<H> headerClass, Class<P> payloadClass) throws IOException {
         if (barcode == null) {
             return null;
         }
@@ -144,17 +182,24 @@ public class JabParser {
             header = jsonArrayStringToObject(barcode.substring(0, p1 + 1), headerClass);
             barcode = barcode.substring(p1 + 1);
             // decrypt barcode payload
-            barcode = header.deobfuscate(null, barcode);
+            barcode = unwrap(barcode);
+            barcode = new String(header.deobfuscate(barcode.getBytes(StandardCharsets.UTF_8)));
+            barcode = wrap(barcode);
         }
         P payload = jsonArrayStringToObject(barcode, payloadClass);
         if (header != null) {
             // validate checksum
-            header.validate(payload, barcode);
+            header.validate(payload);
         }
         return payload;
     }
 
-    private String objectValuesToJsonArrayString(Object obj) throws IOException {
+    public String objectFieldNamesToJsonArrayString(Object obj) throws IOException {
+        List<Object> beanDataValues = getObjectFieldNames(obj);
+        return mapper.writeValueAsString(beanDataValues);
+    }
+
+    public String objectValuesToJsonArrayString(Object obj) throws IOException {
         List<Object> beanDataValues = getObjectValues(obj);
         return mapper.writeValueAsString(beanDataValues);
     }
@@ -236,6 +281,46 @@ public class JabParser {
         return dataValues;
     }
 
+    private List<Object> getMapKeys(Map<String, Object> objData, Object obj) throws IOException {
+        List<Object> dataValues = new ArrayList<>();
+        List<Field> fieldNames = getObjectFieldNames(obj.getClass());
+        for (Field field : fieldNames) {
+            String name = field.getName();
+            Object value = objData.get(name);
+            Class<?> fieldType = getFieldType(field);
+            if (value instanceof Map && !isJavaLangClass(fieldType)) {
+                // not a java.lang property, probably nested java bean, serialize with Value Mapper recursively
+                Object objectValue = getObjectFieldValueByName(obj, name);
+                value = name + ":" + getObjectFieldNames(objectValue);
+            } else if (value instanceof List && !isJavaLangClass(fieldType)) {
+                // array of not a java.lang objects, probably array of java beans, serialize each element with Value Mapper recursively
+                Object objectValue = getObjectFieldValueByName(obj, name);
+                List<Object> arrValue = new ArrayList<Object>();
+                if (objectValue.getClass().isArray()) {
+                    int length = Array.getLength(objectValue);
+                    for (int i = 0; i < length; i++) {
+                        Object elem = Array.get(objectValue, i);
+                        arrValue.add(getObjectFieldNames(elem));
+                    }
+                } else if (objectValue instanceof List) {
+                    for (Object elem : (List) objectValue) {
+                        arrValue.add(getObjectFieldNames(elem));
+                    }
+                }
+                value = name + ":" + arrValue;
+            } else {
+                value = name;
+            }
+            dataValues.add(value);
+        }
+        return dataValues;
+    }
+
+    private List<Object> getObjectFieldNames(Object obj) throws IOException {
+        Map<String, Object> objData = mapper.convertValue(obj, LinkedHashMap.class);
+        return getMapKeys(objData, obj);
+    }
+
     private List<Field> getObjectFieldNames(Class objClass) {
         List<Field> declaredFields = new ArrayList<>();
         for (Class<?> c = objClass; c != null; c = c.getSuperclass()) {
@@ -300,116 +385,24 @@ public class JabParser {
     }
 
     /**
-     * Simple platform-independent way to create hashes from strings.
+     * wrap in "[", "]"
+     * @param str payload to wrap
+     * @return wrapped string
      */
-    public static class Hasher {
-        private final String ALGORITHM = "SHA-256"; // default
-        private final long MAX_SAFE_INTEGER = 9007199254740991L;      // 2^53 - 1 is the maximum "safe" integer for json/javascript
-
-        public long hashString(String data) {
-            try {
-                MessageDigest md = MessageDigest.getInstance(ALGORITHM);
-                byte[] digest = md.digest(data.getBytes(StandardCharsets.UTF_8));
-
-                // shrink it to 8 bytes
-                digest = wrapBytes(digest, 8);
-
-                // build a long integer value
-                long msb = 0;
-                for (int i = 0; i < digest.length; i++) {
-                    msb = (msb << 8) | (digest[i] & 0xff);
-                }
-
-                // make it Unsigned and not larger then MAX_SAFE_INTEGER
-                return Math.abs(msb) % MAX_SAFE_INTEGER;
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Hash Error", e);
-            }
-        }
-
-        public byte[] wrapBytes(byte[] sBytes, int rLen) {
-            int sLen = sBytes.length;
-            byte[] rBytes = new byte[rLen];
-            for (int step = 0, s = 0, r = 0; step < Math.max(rLen, sLen); step++, s++, r++) {
-                s %= sLen;
-                r %= rLen;
-                rBytes[r] ^= sBytes[s];
-            }
-            return rBytes;
-        }
+    public String wrap(String str) {
+        return "[" + str + "]";
     }
 
     /**
-     * Simple platform-independent way to encrypt/decrypt strings.
+     * trim off wrapping "[", "]";
+     * @param str payload to unwrap
+     * @return unwrapped string
      */
-    public static class Crypto {
-        private final String algorithm;
-        private final String mode;
-        private final int keyLen;
-        private final int ivLen;
-        private final Hasher hasher = new Hasher();
-
-        /**
-         * Default Blowfish algorithm.
-         */
-        public Crypto() {
-            this("Blowfish", "Blowfish/CBC/PKCS5Padding", 16, 8);   // default
+    public String unwrap(String str) {
+        if (str.startsWith("[") && str.endsWith("]")) {
+            return str.substring(1, str.length() - 1);
         }
-
-        /**
-         * @param algorithm algorithm name
-         * @param mode algorithm mode
-         * @param keyLen key length in bytes
-         * @param ivLen iV length in bytes
-         */
-        public Crypto(String algorithm, String mode, int keyLen, int ivLen) {
-            this.algorithm = algorithm;
-            this.mode = mode;
-            this.keyLen = keyLen;
-            this.ivLen = ivLen;
-        }
-
-        public String encryptString(String value, String key) {
-            try {
-                SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes(key), algorithm);
-                Cipher cipher = Cipher.getInstance(mode);
-                cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec(ivBytes(key)));
-                byte[] encrypted = cipher.doFinal(value.getBytes(StandardCharsets.UTF_8));
-                return bytesToString(encrypted);
-            } catch (Exception ex) {
-                throw new IllegalArgumentException("Encryption Error", ex);
-            }
-        }
-
-        public String decryptString(String value, String key) {
-            try {
-                byte[] encrypted = stringToBytes(value);
-                SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes(key), algorithm);
-                Cipher cipher = Cipher.getInstance(mode);
-                cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, new IvParameterSpec(ivBytes(key)));
-                return new String(cipher.doFinal(encrypted));
-            } catch (Exception ex) {
-                throw new IllegalArgumentException("Encryption Error", ex);
-            }
-        }
-
-        protected byte[] keyBytes(String seed){
-            return hasher.wrapBytes(seed.getBytes(StandardCharsets.UTF_8), keyLen);
-        }
-
-        protected byte[] ivBytes(String seed){
-            return hasher.wrapBytes(seed.getBytes(StandardCharsets.UTF_8), ivLen);
-        }
-
-        public String bytesToString(byte[] bytes){
-            // use URL_SAFE, NO_WRAP standards
-            return Base64.getEncoder().encodeToString(bytes);   //TODO: this might not work on Android or older Java
-        }
-
-        public byte[] stringToBytes(String string) {
-            // use URL_SAFE, NO_WRAP standards
-            return Base64.getDecoder().decode(string);        //TODO: this might not work on Android or older Java
-        }
+        return str;
     }
 
     /**

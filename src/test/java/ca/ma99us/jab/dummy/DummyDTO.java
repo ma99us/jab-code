@@ -161,9 +161,9 @@ public class DummyDTO {
         private long itemId;
         private String itemName;
 
-        public static DummyItemDTO makeDummyItemDTO() {
+        public static DummyItemDTO makeDummyItemDTO(int itemId) {
             DummyItemDTO item = new DummyItemDTO();
-            item.itemId = (long) Math.floor(Math.random() * 10);
+            item.itemId = itemId;
             item.itemName = "Item #" + item.itemId;
             return item;
         }
@@ -213,7 +213,7 @@ public class DummyDTO {
         dto.id = null;
 
         if (withComposition) {
-            dto.item = DummyItemDTO.makeDummyItemDTO();
+            dto.item = DummyItemDTO.makeDummyItemDTO(69);
         }
 
         if (withCollections) {
@@ -233,20 +233,20 @@ public class DummyDTO {
 
             if (withComposition) {
                 dto.items = new DummyItemDTO[2];
-                dto.items[0] = DummyItemDTO.makeDummyItemDTO();
-                dto.items[1] = DummyItemDTO.makeDummyItemDTO();
+                dto.items[0] = DummyItemDTO.makeDummyItemDTO(0);
+                dto.items[1] = DummyItemDTO.makeDummyItemDTO(1);
 
                 dto.itemsList = new ArrayList<DummyItemDTO>() {{
-                    add(DummyItemDTO.makeDummyItemDTO());
-                    add(DummyItemDTO.makeDummyItemDTO());
-                    add(DummyItemDTO.makeDummyItemDTO());
+                    add(DummyItemDTO.makeDummyItemDTO(2));
+                    add(DummyItemDTO.makeDummyItemDTO(3));
+                    add(DummyItemDTO.makeDummyItemDTO(4));
                 }};
                 dto.itemsMap = new HashMap<String, DummyItemDTO>() {{
-                    DummyItemDTO item = DummyItemDTO.makeDummyItemDTO();
+                    DummyItemDTO item = DummyItemDTO.makeDummyItemDTO(5);
                     put(item.itemId + "#", item);
-                    item = DummyItemDTO.makeDummyItemDTO();
+                    item = DummyItemDTO.makeDummyItemDTO(6);
                     put(item.itemId + "#", item);
-                    item = DummyItemDTO.makeDummyItemDTO();
+                    item = DummyItemDTO.makeDummyItemDTO(7);
                     put(item.itemId + "#", item);
                 }};
             }

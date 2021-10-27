@@ -1,59 +1,51 @@
 package ca.ma99us.jab.headers;
 
-import ca.ma99us.jab.JabParser;
-import lombok.*;
+import ca.ma99us.jab.JabCrypto;
+import ca.ma99us.jab.JabHasher;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Encrypts/decrypts payload bytes using default symmetrical cypher with a string Key
+ * @param <P>
+ */
 @Data
-@EqualsAndHashCode(callSuper=true)
-public class CryptoChecksumHeader<P> extends ChecksumHeader<P> {
+public class CryptoHeader<P> extends AbstractHeader<P> {
     private Long keyId;
 
     @Getter
     private final static Keys keys = new Keys();
 
     @Override
-    public String obfuscate(P dto, String payload) {
-        // super shrinks 'null's
-        payload = super.obfuscate(dto, payload);
-
+    public void populate(P dto) throws IOException {
         // populate key id
         if(keys.encryptKey == null){
-            throw new IllegalArgumentException("Encryption key has to be specified. Set CryptoChecksumHeader.Registry.encryptKey(...) first");
+            throw new IOException("Encryption key has to be specified. Set CryptoChecksumHeader.Registry.encryptKey(...) first");
         }
         keyId = keys.encryptKey.getKeyId();
-
-        // encrypt the payload
-        String encrypted = new JabParser.Crypto().encryptString(payload, keys.encryptKey.getKey());
-
-        // wrap in "[", "]"
-        return "[" + encrypted + "]";
     }
 
     @Override
-    public String deobfuscate(P dto, String payload) throws IOException {
-        // validate key id first
+    public byte[] obfuscate(byte[] payload) throws IOException{
+        // encrypt the payload
+        return new JabCrypto().encrypt(payload, keys.encryptKey.getKey());
+    }
+
+    @Override
+    public byte[] deobfuscate(byte[] payload) throws IOException {
+        // validate the key id first
         Keys.CryptoKey key = keys.findKey(keyId);
         if (key == null) {
             throw new IOException("Not registered key id: " + keyId);
         }
 
-        // trim off "[", "]";
-        payload = payload.substring(1, payload.length() - 1);
-
-        //decrypt payload
-        String decrypted = new JabParser.Crypto().decryptString(payload, key.getKey());
-        if (!decrypted.startsWith("[") || !decrypted.endsWith("]")) {
-            throw new IOException("Bad decrypted payload");
-        }
-
-        // super inflates 'null's back
-        decrypted = super.deobfuscate(dto, decrypted);
-
-        return decrypted;
+        //decrypt the payload
+        return new JabCrypto().decrypt(payload, key.getKey());
     }
 
     /**
@@ -91,7 +83,7 @@ public class CryptoChecksumHeader<P> extends ChecksumHeader<P> {
             }
 
             public long getKeyId() {
-                return new JabParser.Hasher().hashString(getKeyWithSalt());
+                return new JabHasher().hashString(getKeyWithSalt());
             }
         }
     }
