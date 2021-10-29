@@ -2,6 +2,7 @@ package ca.ma99us.jab;
 
 import ca.ma99us.jab.dummy.DummyDTO;
 import ca.ma99us.jab.headers.ChecksumHeader;
+import ca.ma99us.jab.headers.CompressCryptoHeaderGroup;
 import ca.ma99us.jab.headers.JabHeader;
 import org.junit.Assert;
 import org.junit.Test;
@@ -134,6 +135,27 @@ public class JabParserTest {
         String barcode = null;
         try {
             barcode = jabParser.objectToJabSchema(null, dto);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+
+        Assert.assertNotNull(barcode);
+        System.out.println("schema: \"" + barcode + "\"");
+        System.out.println(dto);
+    }
+
+    @Test
+    public void headersGroupSchemaTest() {
+        DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
+        CompressCryptoHeaderGroup<DummyDTO> header = new CompressCryptoHeaderGroup<DummyDTO>();
+
+        JabParser jabParser = new JabParser();
+
+        // generate barcode
+        String barcode = null;
+        try {
+            barcode = jabParser.objectToJabSchema(header, dto);
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail();

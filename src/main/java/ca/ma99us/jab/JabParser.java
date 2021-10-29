@@ -2,6 +2,7 @@ package ca.ma99us.jab;
 
 
 import ca.ma99us.jab.headers.JabHeader;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -64,6 +65,11 @@ public class JabParser {
         return matcher.find();
     }
 
+    /**
+     * Extracts format id from the Jab string
+     * @param barcode Jab string
+     * @return long format id or null
+     */
     public Long findJabFormatId(String barcode) {
         if (!isPossibleJab(barcode)) {
             return null; // bad format
@@ -82,6 +88,13 @@ public class JabParser {
         }
     }
 
+    /**
+     * Serializes POJO into a Jab string
+     * @param header JabHeader(s) to apply to payload string portion
+     * @param payload POJO java bean
+     * @return Jab string
+     * @throws IOException in case of any failure
+     */
     public <H extends JabHeader<P>, P> String objectToJab(H header, P payload) throws IOException {
         StringBuilder sb = new StringBuilder();
 
@@ -102,6 +115,13 @@ public class JabParser {
         return sb.toString();
     }
 
+    /**
+     * Serializes POJO into a byte array
+     * @param header JabHeader(s) to apply to payload string portion
+     * @param payload POJO java bean
+     * @return Jab byte array (non human readable bytes)
+     * @throws IOException in case of any failure
+     */
     public <H extends JabHeader<P>, P> byte[] objectToJabBytes(H header, P payload) throws IOException {
         StringBuilder sb = new StringBuilder();
 
@@ -126,6 +146,13 @@ public class JabParser {
         return os.toByteArray();
     }
 
+    /**
+     * Generates schema of the Jab serialization
+     * @param header JabHeader(s) to apply to payload string portion
+     * @param payload POJO java bean
+     * @return Jab string
+     * @throws IOException in case of any failure
+     */
     public <H extends JabHeader<P>, P> String objectToJabSchema(H header, P payload) throws IOException {
         StringBuilder sb = new StringBuilder();
 
@@ -142,6 +169,13 @@ public class JabParser {
         return sb.toString();
     }
 
+    /**
+     * Parses Jab string into corresponding POJO java bean. Tries automatically find registered format to decode.
+     * @see Formats#registerFormat(java.lang.Class, java.lang.Class)
+     * @param barcode Jab string
+     * @return POJO java bean
+     * @throws IOException in case of any failure
+     */
     public Object jabToObject(String barcode) throws IOException {
         Long formatId = findJabFormatId(barcode);
         if (formatId == null) {
@@ -154,6 +188,14 @@ public class JabParser {
         return jabToObject(barcode, format.getHeaderClass(), format.getPayloadClass());
     }
 
+    /**
+     * Parses Jab string into corresponding POJO java bean.
+     * @param barcode Jab string
+     * @param headerClass JabHeader(s) class to apply to payload string portion
+     * @param payloadClass POJO java bean class
+     * @return Jab string
+     * @throws IOException in case of any failure
+     */
     public <H extends JabHeader<P>, P> P jabToObject(String barcode, Class<H> headerClass, Class<P> payloadClass) throws IOException {
         if (barcode == null) {
             return null;
@@ -194,11 +236,17 @@ public class JabParser {
         return payload;
     }
 
-    public String objectFieldNamesToJsonArrayString(Object obj) throws IOException {
+    private String objectFieldNamesToJsonArrayString(Object obj) throws IOException {
         List<Object> beanDataValues = getObjectFieldNames(obj);
         return mapper.writeValueAsString(beanDataValues);
     }
 
+    /**
+     * Serialize POJO java bean into a JSON array string of only object fields values. Jab object serialization.
+     * @param obj POJO java bean
+     * @return Jab object string
+     * @throws IOException in case of any failure
+     */
     public String objectValuesToJsonArrayString(Object obj) throws IOException {
         List<Object> beanDataValues = getObjectValues(obj);
         return mapper.writeValueAsString(beanDataValues);
@@ -325,17 +373,17 @@ public class JabParser {
         List<Field> declaredFields = new ArrayList<>();
         for (Class<?> c = objClass; c != null; c = c.getSuperclass()) {
             if (c.equals(Object.class)) {
-                continue;
+                continue;   // don't gig any further
             }
             List<Field> allFields = new ArrayList<>(Arrays.asList(c.getDeclaredFields()));
-            //filter out static fields
+            // filter out static fields and fields with @JsonIgnore annotation
             List<Field> fields = new ArrayList<>();
             for (Field f : allFields) {
-                if (!Modifier.isStatic(f.getModifiers())) {
+                if (!Modifier.isStatic(f.getModifiers()) && f.getAnnotation(JsonIgnore.class) == null) {
                     fields.add(f);
                 }
             }
-            // Unfortunately, some JVMs do not guarantee DeclaredFields order, so we have to sort fields ourselfs
+            // Unfortunately, some JVMs do not guarantee DeclaredFields order, so we have to sort fields ourselves
             Collections.sort(fields, new Comparator<Field>() {
                 public int compare(Field f1, Field f2) {
                     // sort each class fields names alphabetically
@@ -394,7 +442,7 @@ public class JabParser {
     }
 
     /**
-     * trim off wrapping "[", "]";
+     * trim off "[", "]", if previously wrapped;
      * @param str payload to unwrap
      * @return unwrapped string
      */
@@ -412,16 +460,32 @@ public class JabParser {
     public static class Formats {
         private final Map<Long, JabFormat<?, ?>> formats = new HashMap<>();
 
+        /**
+         * Register a Jab Format - a pair of Header and Payload classes
+         * @param headerClass header class
+         * @param payloadClass POJO java bean class (payload)
+         * @return this
+         */
         public synchronized <H extends JabHeader, P> Formats registerFormat(Class<H> headerClass, Class<P> payloadClass) {
             JabFormat<H, P> format = new JabFormat<H, P>(headerClass, payloadClass);
             formats.put(format.getFormatId(), format);
             return this;
         }
 
+        /**
+         * Finds registered format for a given id
+         * @param id long number format id
+         * @return registered Jab format or null
+         */
         public synchronized JabFormat<?, ?> findFormat(Long id) {
             return id != null ? formats.get(id) : null;
         }
 
+        /**
+         * Jab format - a pair of Header and Payload classes.
+         * @param <H>
+         * @param <P>
+         */
         @Data
         @AllArgsConstructor
         public static class JabFormat<H extends JabHeader, P> {
@@ -433,6 +497,10 @@ public class JabParser {
                 payloadClass = (Class<P>) payload.getClass();
             }
 
+            /**
+             * Calculate format id.
+             * @return long number format id
+             */
             public long getFormatId() {
                 StringBuilder sb = new StringBuilder();
                 if (headerClass != null) {

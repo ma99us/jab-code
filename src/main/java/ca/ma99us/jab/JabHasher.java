@@ -10,6 +10,11 @@ public class JabHasher {
     private final String ALGORITHM = "SHA-256"; // default
     private final long MAX_SAFE_INTEGER = 9007199254740991L;      // 2^53 - 1 is the maximum "safe" integer for json/javascript
 
+    /**
+     * Calculate hash code of the given string
+     * @param data string
+     * @return long number hash
+     */
     public long hashString(String data) {
         try {
             MessageDigest md = MessageDigest.getInstance(ALGORITHM);
@@ -31,6 +36,12 @@ public class JabHasher {
         }
     }
 
+    /**
+     * Wrap byte array onto itself to create different length byte array as a result
+     * @param sBytes source byte array
+     * @param rLen length of desired byte array
+     * @return new byte array of the given length
+     */
     public byte[] wrapBytes(byte[] sBytes, int rLen) {
         int sLen = sBytes.length;
         byte[] rBytes = new byte[rLen];

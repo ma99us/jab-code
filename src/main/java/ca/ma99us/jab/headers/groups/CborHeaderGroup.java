@@ -1,12 +1,15 @@
 package ca.ma99us.jab.headers.groups;
 
 import ca.ma99us.jab.headers.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 @Data
 public class CborHeaderGroup<P> extends AbstractHeaderGroup<P> {
     private final ChecksumHeader<P> checksumHeader = new ChecksumHeader<P>();
+    @JsonIgnore
     private final CborArrayHeader<P> cborArrayHeader = new CborArrayHeader<P>();
+    @JsonIgnore
     private final ToStringHeader<P> toStringHeader = new ToStringHeader<P>();
 
     @Override
