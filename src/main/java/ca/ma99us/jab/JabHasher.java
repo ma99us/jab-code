@@ -1,5 +1,8 @@
 package ca.ma99us.jab;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
@@ -9,6 +12,15 @@ import java.security.MessageDigest;
 public class JabHasher {
     private final String ALGORITHM = "SHA-256"; // default
     private final long MAX_SAFE_INTEGER = 9007199254740991L;      // 2^53 - 1 is the maximum "safe" integer for json/javascript
+
+    @Getter
+    @Setter
+    private static JabHasher globalHasher;
+
+    // register default global hasher. Different implementation could be injected later.
+    static {
+        globalHasher = new JabHasher();
+    }
 
     /**
      * Calculate hash code of the given string

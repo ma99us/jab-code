@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 public class JabParser {
     public static final String PREFIX = "JAB";
     public static final String DELIMITER = "|";
-    private static final JabHasher hasher = new JabHasher();
     @Getter
     private final Formats formats = new Formats();
 
@@ -507,7 +506,7 @@ public class JabParser {
                     sb.append(headerClass.getSimpleName());
                 }
                 sb.append(payloadClass.getSimpleName());
-                return hasher.hashString(sb.toString());
+                return JabHasher.getGlobalHasher().hashString(sb.toString());
             }
         }
     }

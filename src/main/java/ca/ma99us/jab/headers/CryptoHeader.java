@@ -1,8 +1,7 @@
 package ca.ma99us.jab.headers;
 
 import ca.ma99us.jab.JabCrypto;
-import ca.ma99us.jab.JabHasher;
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.Getter;
 
@@ -19,72 +18,62 @@ public class CryptoHeader<P> extends AbstractHeader<P> {
     private Long keyId;
 
     @Getter
-    private final static Keys keys = new Keys();
+    private final static Cryptos cryptos = new Cryptos();
+    @JsonIgnore
+    private JabCrypto encrypt;
+
+    public CryptoHeader<P> setCrypto(JabCrypto encrypt) {
+        this.encrypt = encrypt;
+        cryptos.registerCrypto(this.encrypt);   // also register globally for decryption
+        return this;
+    }
 
     @Override
     public void populate(P dto) throws IOException {
-        // populate key id
-        if(keys.encryptKey == null){
-            throw new IOException("Encryption key has to be specified. Set CryptoChecksumHeader.Registry.encryptKey(...) first");
+        if(encrypt == null){
+            throw new IOException("Encryption Crypto has to be specified. Set CryptoHeader.setEncrypt(...) first");
         }
-        keyId = keys.encryptKey.getKeyId();
+
+        // populate key id
+        keyId = encrypt.getCryptoId();
     }
 
     @Override
     public byte[] obfuscate(byte[] payload) throws IOException{
+        if(encrypt == null){
+            throw new IOException("Encryption Crypto has to be specified. Set CryptoHeader.setEncrypt(...) first");
+        }
+
         // encrypt the payload
-        return new JabCrypto().encrypt(payload, keys.encryptKey.getKey());
+        return encrypt.encrypt(payload);
     }
 
     @Override
     public byte[] deobfuscate(byte[] payload) throws IOException {
         // validate the key id first
-        Keys.CryptoKey key = keys.findKey(keyId);
-        if (key == null) {
+        JabCrypto decrypt = cryptos.findCrypto(keyId);
+        if (decrypt == null) {
             throw new IOException("Not registered key id: " + keyId);
         }
 
         //decrypt the payload
-        return new JabCrypto().decrypt(payload, key.getKey());
+        return decrypt.decrypt(payload);
     }
 
     /**
      * Simple collection of registered crypo keys and salts.
      * Finds crypto key from the barcode header key id.
      */
-    public static class Keys {
-        private final Map<Long, CryptoKey> keys = new HashMap<>();
-        private CryptoKey encryptKey;
+    public static class Cryptos {
+        private final Map<Long, JabCrypto> keyIdCryptos = new HashMap<>();
 
-        public Keys encryptKey(String key, String salt) {
-            encryptKey = new CryptoKey(key, salt);
-            decryptKey(key, salt);  // also register this key for decryption
+        public Cryptos registerCrypto(JabCrypto crypto) {
+            keyIdCryptos.put(crypto.getCryptoId(), crypto);
             return this;
         }
 
-        public synchronized Keys decryptKey(String key, String salt) {
-            CryptoKey cryptoKey = new CryptoKey(key, salt);
-            keys.put(cryptoKey.getKeyId(), cryptoKey);
-            return this;
-        }
-
-        public synchronized CryptoKey findKey(Long id) {
-            return id != null ? keys.get(id) : null;
-        }
-
-        @Data
-        @AllArgsConstructor
-        public static class CryptoKey {
-            private final String key;
-            private final String salt;
-
-            String getKeyWithSalt(){
-                return key + (salt != null ? salt : "");
-            }
-
-            public long getKeyId() {
-                return new JabHasher().hashString(getKeyWithSalt());
-            }
+        public synchronized JabCrypto findCrypto(Long id) {
+            return id != null ? keyIdCryptos.get(id) : null;
         }
     }
 }

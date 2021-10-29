@@ -41,16 +41,33 @@ public class JabParserHeadersTest {
             System.out.println("Expected exception: " + ex.getMessage());
         }
 
+        System.out.println("\nNoNulls, then Crypto:");
         // set the key
-        CryptoHeader.getKeys().encryptKey("SomeSuperSecretKey", "SomeSalt");
+        header.getCryptoHeader().setCrypto(new JabCrypto().setKeySecrets("SomeSuperSecretKey", "SomeSalt"));
 
         barcodeTest(header, CryptoHeaderGroup.class, dto, DummyDTO.class, true);
 
         // compressed version
-        System.out.println("Compressed\n");
-        CompressCryptoHeaderGroup<DummyDTO> header1 = new CompressCryptoHeaderGroup<DummyDTO>();
+        System.out.println("\nNoNulls, then Compress, then Crypto:");
+        NoNullsCompressCryptoHeaderGroup<DummyDTO> header1 = new NoNullsCompressCryptoHeaderGroup<DummyDTO>();
+        header1.getCryptoHeader().setCrypto(new JabCrypto().setKeySecrets("SomeSuperSecretKey", "SomeSalt"));
 
-        barcodeTest(header1, CompressCryptoHeaderGroup.class, dto, DummyDTO.class, true);
+        barcodeTest(header1, NoNullsCompressCryptoHeaderGroup.class, dto, DummyDTO.class, true);
+
+        // compressed cbor version
+        System.out.println("\nCbor, then Compress, then Crypto:");
+        CborCompressCryptoHeaderGroup<DummyDTO> header2 = new CborCompressCryptoHeaderGroup<DummyDTO>();
+        header2.getCryptoHeader().setCrypto(new JabCrypto().setKeySecrets("SomeSuperSecretKey", "SomeSalt"));
+
+        barcodeTest(header2, CborCompressCryptoHeaderGroup.class, dto, DummyDTO.class, true);
+
+        // compressed cbor version
+        System.out.println("\nCbor, then Crypto then Compressed:");
+        CborCryptoCompressHeaderGroup<DummyDTO> header3 = new CborCryptoCompressHeaderGroup<DummyDTO>();
+        header3.getCryptoHeader().setCrypto(new JabCrypto().setKeySecrets("SomeSuperSecretKey", "SomeSalt"));
+
+        barcodeTest(header3, CborCryptoCompressHeaderGroup.class, dto, DummyDTO.class, true);
+
     }
 
     @Test
@@ -66,12 +83,12 @@ public class JabParserHeadersTest {
         DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
         CborHeaderGroup<DummyDTO> header = new CborHeaderGroup<DummyDTO>();
 
-        barcodeTest(header, CborHeaderGroup.class, dto, DummyDTO.class, false);
+        barcodeTest(header, CborHeaderGroup.class, dto, DummyDTO.class, true);
 
         // compressed version
-        System.out.println("Compressed\n");
+        System.out.println("\nCompressed:");
         CompressCborHeaderGroup<DummyDTO> header1 = new CompressCborHeaderGroup<DummyDTO>();
-        barcodeTest(header1, CompressCborHeaderGroup.class, dto, DummyDTO.class, false);
+        barcodeTest(header1, CompressCborHeaderGroup.class, dto, DummyDTO.class, true);
     }
 
     @Test
@@ -79,12 +96,12 @@ public class JabParserHeadersTest {
         DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
         BsonHeaderGroup<DummyDTO> header = new BsonHeaderGroup<DummyDTO>();
 
-        barcodeTest(header, BsonHeaderGroup.class, dto, DummyDTO.class, false);
+        barcodeTest(header, BsonHeaderGroup.class, dto, DummyDTO.class, true);
 
         // compressed version
-        System.out.println("Compressed\n");
+        System.out.println("\nCompressed:");
         CompressBsonHeaderGroup<DummyDTO> header1 = new CompressBsonHeaderGroup<DummyDTO>();
-        barcodeTest(header1, CompressBsonHeaderGroup.class, dto, DummyDTO.class, false);
+        barcodeTest(header1, CompressBsonHeaderGroup.class, dto, DummyDTO.class, true);
     }
 
     @Test
@@ -92,7 +109,7 @@ public class JabParserHeadersTest {
         DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
         MessagePackHeaderGroup<DummyDTO> header = new MessagePackHeaderGroup<DummyDTO>();
 
-        barcodeTest(header, MessagePackHeaderGroup.class, dto, DummyDTO.class, false);
+        barcodeTest(header, MessagePackHeaderGroup.class, dto, DummyDTO.class, true);
     }
 
     private <H extends JabHeader<P>, P> P barcodeTest(H header, Class<H> hClass, P dto, Class<P> pClass, boolean withValidation) {

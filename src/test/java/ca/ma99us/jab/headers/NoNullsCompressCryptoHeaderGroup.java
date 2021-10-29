@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 @Data
-public class CompressCryptoHeaderGroup<P> extends AbstractHeaderGroup<P> {
+public class NoNullsCompressCryptoHeaderGroup<P> extends AbstractHeaderGroup<P> {
     private final ChecksumHeader<P> checksumHeader = new ChecksumHeader<P>();
     @JsonIgnore
     private final NoNullsHeader<P> noNullsHeader = new NoNullsHeader<P>();

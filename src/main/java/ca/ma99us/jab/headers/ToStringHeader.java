@@ -1,6 +1,7 @@
 package ca.ma99us.jab.headers;
 
 import ca.ma99us.jab.JabCrypto;
+import ca.ma99us.jab.JabToString;
 import lombok.Data;
 
 import java.io.IOException;
@@ -15,13 +16,11 @@ public class ToStringHeader<P>  extends AbstractHeader<P> {
 
     @Override
     public byte[] obfuscate(byte[] payload) throws IOException {
-        JabCrypto crypto = new JabCrypto();
-        return crypto.bytesToString(payload).getBytes(StandardCharsets.UTF_8);
+        return JabToString.getGlobalToString().bytesToString(payload).getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
     public byte[] deobfuscate(byte[] payload) throws IOException {
-        JabCrypto crypto = new JabCrypto();
-        return crypto.stringToBytes(new String(payload));
+        return JabToString.getGlobalToString().stringToBytes(new String(payload));
     }
 }

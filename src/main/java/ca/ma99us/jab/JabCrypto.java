@@ -1,5 +1,8 @@
 package ca.ma99us.jab;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -14,7 +17,8 @@ public class JabCrypto {
     private final String mode;
     private final int keyLen;
     private final int ivLen;
-    private final JabHasher hasher = new JabHasher();
+
+    private CryptoKey cryptoKey;
 
     /**
      * Default Blowfish algorithm.
@@ -23,11 +27,24 @@ public class JabCrypto {
         this("Blowfish", "Blowfish/CBC/PKCS5Padding", 16, 8);   // default
     }
 
+    public JabCrypto setKeySecrets(String key, String salt) {
+        this.cryptoKey = new CryptoKey(key, salt);
+        return this;
+    }
+
+    /**
+     * Unique id of the crypto and it's key
+     * @return long integer id
+     */
+    public Long getCryptoId() {
+        return JabHasher.getGlobalHasher().hashString(this.algorithm + this.mode + (cryptoKey != null ? cryptoKey.getKeyWithSalt() : ""));
+    }
+
     /**
      * @param algorithm algorithm name
-     * @param mode algorithm mode
-     * @param keyLen key length in bytes
-     * @param ivLen iV length in bytes
+     * @param mode      algorithm mode
+     * @param keyLen    key length in bytes
+     * @param ivLen     iV length in bytes
      */
     public JabCrypto(String algorithm, String mode, int keyLen, int ivLen) {
         this.algorithm = algorithm;
@@ -38,18 +55,34 @@ public class JabCrypto {
 
     /**
      * Encrypt a string to human-readable string
+     *
      * @param value string to encrypt
-     * @param key crypto key seed
+     * @param key   crypto key seed
      * @return encrypted string
      */
     public String encryptString(String value, String key) {
-        return bytesToString(encrypt(value.getBytes(StandardCharsets.UTF_8), key));
+        return JabToString.getGlobalToString().bytesToString(encrypt(value.getBytes(StandardCharsets.UTF_8), key));
+    }
+
+    /**
+     * Encrypt a byte array with the previously set Key.
+     *
+     * @param value bytes to encrypt
+     * @return encrypted bytes
+     */
+    public byte[] encrypt(byte[] value) {
+        if (cryptoKey == null) {
+            throw new IllegalArgumentException("Crypto key has to be set first");
+        }
+
+        return encrypt(value, cryptoKey.getKey());
     }
 
     /**
      * Encrypt a byte array.
+     *
      * @param value bytes to encrypt
-     * @param key crypto key seed
+     * @param key   crypto key seed
      * @return encrypted bytes
      */
     public byte[] encrypt(byte[] value, String key) {
@@ -65,18 +98,34 @@ public class JabCrypto {
 
     /**
      * Decrypts a string
+     *
      * @param value strng to decrypt
-     * @param key crypto key seed
+     * @param key   crypto key seed
      * @return decrypted string
      */
     public String decryptString(String value, String key) {
-        return new String(decrypt(stringToBytes(value), key));
+        return new String(decrypt(JabToString.getGlobalToString().stringToBytes(value), key));
+    }
+
+    /**
+     * Decrypts a byte array with the previously set key.
+     *
+     * @param encrypted bytes to decrypt
+     * @return decrypted bytes
+     */
+    public byte[] decrypt(byte[] encrypted) {
+        if (cryptoKey == null) {
+            throw new IllegalArgumentException("Crypto key has to be set first");
+        }
+
+        return decrypt(encrypted, cryptoKey.getKey());
     }
 
     /**
      * Decrypts a byte array.
+     *
      * @param encrypted bytes to decrypt
-     * @param key crypto key seed
+     * @param key       crypto key seed
      * @return decrypted bytes
      */
     public byte[] decrypt(byte[] encrypted, String key) {
@@ -90,31 +139,22 @@ public class JabCrypto {
         }
     }
 
-    protected byte[] keyBytes(String seed){
-        return hasher.wrapBytes(seed.getBytes(StandardCharsets.UTF_8), keyLen);
+    protected byte[] keyBytes(String seed) {
+        return JabHasher.getGlobalHasher().wrapBytes(seed.getBytes(StandardCharsets.UTF_8), keyLen);
     }
 
-    protected byte[] ivBytes(String seed){
-        return hasher.wrapBytes(seed.getBytes(StandardCharsets.UTF_8), ivLen);
+    protected byte[] ivBytes(String seed) {
+        return JabHasher.getGlobalHasher().wrapBytes(seed.getBytes(StandardCharsets.UTF_8), ivLen);
     }
 
-    /**
-     * Convert arbitrary bytes to human-readable string. Base64 be default.
-     * @param bytes byte array
-     * @return string
-     */
-    public String bytesToString(byte[] bytes){
-        // use URL_SAFE, NO_WRAP standards
-        return Base64.getEncoder().encodeToString(bytes);   //TODO: this might not work on Android or older Java
-    }
+    @Data
+    @AllArgsConstructor
+    protected class CryptoKey {
+        private final String key;
+        private final String salt;
 
-    /**
-     * Convert a string representation back to byte array. Base64 be default.
-     * @param string bytes string representation
-     * @return bytes
-     */
-    public byte[] stringToBytes(String string) {
-        // use URL_SAFE, NO_WRAP standards
-        return Base64.getDecoder().decode(string);        //TODO: this might not work on Android or older Java
+        String getKeyWithSalt() {
+            return key + (salt != null ? salt : "");
+        }
     }
 }

@@ -30,7 +30,7 @@ public abstract class AbstractHeaderGroup<P> implements JabHeader<P> {
         // in reverse order
         JabHeader<P>[] headers = headers();
         for (int idx = headers.length - 1; idx >= 0; idx--) {
-            headers[idx].populate(dto);
+            headers[idx].validate(dto);
         }
     }
 

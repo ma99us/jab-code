@@ -17,16 +17,14 @@ public class ChecksumHeader<P> extends AbstractHeader<P> {
     public void populate(P dto) throws IOException {
         // just checksum of the DTO JSON values array string. Ignore the payload string.
         JabParser parser = new JabParser();
-        JabHasher hasher = new JabHasher();
-        checksum = hasher.hashString(parser.objectValuesToJsonArrayString(dto));
+        checksum = JabHasher.getGlobalHasher().hashString(parser.objectValuesToJsonArrayString(dto));
     }
 
     @Override
     public void validate(P dto) throws IOException {
         // just checksum of the DTO JSON values array string. Ignore the payload string.
         JabParser parser = new JabParser();
-        JabHasher hasher = new JabHasher();
-        long hash = hasher.hashString(parser.objectValuesToJsonArrayString(dto));
+        long hash = JabHasher.getGlobalHasher().hashString(parser.objectValuesToJsonArrayString(dto));
         if (checksum != hash) {
             throw new IOException("Barcode checksum mismatch; expected " + checksum + ", but got " + hash);
         }

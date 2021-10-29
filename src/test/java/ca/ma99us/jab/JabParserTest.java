@@ -2,7 +2,7 @@ package ca.ma99us.jab;
 
 import ca.ma99us.jab.dummy.DummyDTO;
 import ca.ma99us.jab.headers.ChecksumHeader;
-import ca.ma99us.jab.headers.CompressCryptoHeaderGroup;
+import ca.ma99us.jab.headers.NoNullsCompressCryptoHeaderGroup;
 import ca.ma99us.jab.headers.JabHeader;
 import org.junit.Assert;
 import org.junit.Test;
@@ -148,7 +148,7 @@ public class JabParserTest {
     @Test
     public void headersGroupSchemaTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
-        CompressCryptoHeaderGroup<DummyDTO> header = new CompressCryptoHeaderGroup<DummyDTO>();
+        NoNullsCompressCryptoHeaderGroup<DummyDTO> header = new NoNullsCompressCryptoHeaderGroup<DummyDTO>();
 
         JabParser jabParser = new JabParser();
 
@@ -171,8 +171,8 @@ public class JabParserTest {
         // input shorter then the output
         String sStr = "short string", sStr1 = "short str1ng";
 
-        byte[] rBytes = new JabHasher().wrapBytes(sStr.getBytes(StandardCharsets.UTF_8), 256);
-        byte[] rBytes1 = new JabHasher().wrapBytes(sStr1.getBytes(StandardCharsets.UTF_8), 256);
+        byte[] rBytes = JabHasher.getGlobalHasher().wrapBytes(sStr.getBytes(StandardCharsets.UTF_8), 256);
+        byte[] rBytes1 = JabHasher.getGlobalHasher().wrapBytes(sStr1.getBytes(StandardCharsets.UTF_8), 256);
 
         Assert.assertNotNull(rBytes);
         Assert.assertEquals(256, rBytes.length);
@@ -182,8 +182,8 @@ public class JabParserTest {
         sStr = "some very long string to get bytes from for wrapping into shorter buffer";
         sStr1 = "some very 1ong string to get bytes from for wrapping into shorter buffer";
 
-        rBytes = new JabHasher().wrapBytes(sStr.getBytes(StandardCharsets.UTF_8), 8);
-        rBytes1 = new JabHasher().wrapBytes(sStr1.getBytes(StandardCharsets.UTF_8), 8);
+        rBytes = JabHasher.getGlobalHasher().wrapBytes(sStr.getBytes(StandardCharsets.UTF_8), 8);
+        rBytes1 = JabHasher.getGlobalHasher().wrapBytes(sStr1.getBytes(StandardCharsets.UTF_8), 8);
 
         Assert.assertNotNull(rBytes);
         Assert.assertEquals(8, rBytes.length);
