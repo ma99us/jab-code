@@ -1,7 +1,6 @@
 package ca.ma99us.jab.headers.groups;
 
 import ca.ma99us.jab.headers.JabHeader;
-import lombok.Data;
 
 import java.io.IOException;
 

@@ -20,15 +20,14 @@ public class NoNullsHeader<P> extends AbstractHeader<P> {
     @Override
     public byte[] obfuscate(byte[] payload) throws IOException {
         // shrink the nulls
-        JabParser parser = new JabParser();
-        String str = parser.wrap(new String(payload));
+        String str = JabParser.wrap(new String(payload));
         Pattern regex = Pattern.compile("([\\[,])(null)([,\\]])");
         Matcher matcher = regex.matcher(str);
         while (matcher.find()) {
             str = matcher.replaceAll("$1$3");
             matcher = regex.matcher(str);
         }
-        return parser.unwrap(str).getBytes(StandardCharsets.UTF_8);
+        return JabParser.unwrap(str).getBytes(StandardCharsets.UTF_8);
     }
 
     /**
@@ -37,14 +36,13 @@ public class NoNullsHeader<P> extends AbstractHeader<P> {
     @Override
     public byte[] deobfuscate(byte[] payload) throws IOException {
         // expand nulls back
-        JabParser parser = new JabParser();
-        String str = parser.wrap(new String(payload));
+        String str = JabParser.wrap(new String(payload));
         Pattern regex = Pattern.compile("([\\[,])([,\\]])");
         Matcher matcher = regex.matcher(str);
         while (matcher.find()) {
             str = matcher.replaceAll("$1null$2");
             matcher = regex.matcher(str);
         }
-        return parser.unwrap(str).getBytes(StandardCharsets.UTF_8);
+        return JabParser.unwrap(str).getBytes(StandardCharsets.UTF_8);
     }
 }

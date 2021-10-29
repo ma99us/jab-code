@@ -2,8 +2,8 @@ package ca.ma99us.jab;
 
 import ca.ma99us.jab.dummy.DummyDTO;
 import ca.ma99us.jab.headers.ChecksumHeader;
-import ca.ma99us.jab.headers.NoNullsCompressCryptoHeaderGroup;
 import ca.ma99us.jab.headers.JabHeader;
+import ca.ma99us.jab.headers.NoNullsCompressCryptoHeaderGroup;
 import org.junit.Assert;
 import org.junit.Test;
 

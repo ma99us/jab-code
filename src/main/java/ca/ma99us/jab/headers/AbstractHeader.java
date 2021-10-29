@@ -1,12 +1,6 @@
 package ca.ma99us.jab.headers;
 
-import ca.ma99us.jab.JabParser;
-import lombok.Data;
-
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Does nothing. Just an interface adapter

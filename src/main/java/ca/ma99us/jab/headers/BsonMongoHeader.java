@@ -25,8 +25,7 @@ public class BsonMongoHeader<P> extends AbstractHeader<P> {
     @Override
     public byte[] obfuscate(byte[] payload) throws IOException {
         // wrap to turn in to json array string
-        JabParser parser = new JabParser();
-        String payloadStr = parser.wrap(new String(payload));
+        String payloadStr = JabParser.wrap(new String(payload));
 
         // read the array to List<>
         ObjectMapper jmapper = new ObjectMapper();
@@ -56,8 +55,7 @@ public class BsonMongoHeader<P> extends AbstractHeader<P> {
         String payloadStr = jmapper.writeValueAsString(list);
 
         // unwrap from json array
-        JabParser parser = new JabParser();
-        payloadStr = parser.unwrap(payloadStr);
+        payloadStr = JabParser.unwrap(payloadStr);
 
         return payloadStr.getBytes(StandardCharsets.UTF_8);
     }

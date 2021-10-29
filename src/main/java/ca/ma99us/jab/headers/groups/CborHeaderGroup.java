@@ -1,6 +1,9 @@
 package ca.ma99us.jab.headers.groups;
 
-import ca.ma99us.jab.headers.*;
+import ca.ma99us.jab.headers.CborArrayHeader;
+import ca.ma99us.jab.headers.ChecksumHeader;
+import ca.ma99us.jab.headers.JabHeader;
+import ca.ma99us.jab.headers.ToStringHeader;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 

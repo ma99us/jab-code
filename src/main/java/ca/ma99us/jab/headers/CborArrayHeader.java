@@ -21,8 +21,7 @@ public class CborArrayHeader<P> extends AbstractHeader<P> {
     @Override
     public byte[] obfuscate(byte[] payload) throws IOException {
         // wrap to turn in to json array string
-        JabParser parser = new JabParser();
-        String payloadStr = parser.wrap(new String(payload));
+        String payloadStr = JabParser.wrap(new String(payload));
 
         // encode to cbor bytes
         CborArray cbor = CborArray.createFromJSONArray(new JSONArray(payloadStr));
@@ -41,8 +40,7 @@ public class CborArrayHeader<P> extends AbstractHeader<P> {
         }
 
         // unwrap from json array
-        JabParser parser = new JabParser();
-        String payloadStr = parser.unwrap(cbor.toJsonString());
+        String payloadStr = JabParser.unwrap(cbor.toJsonString());
 
         return payloadStr.getBytes(StandardCharsets.UTF_8);
     }

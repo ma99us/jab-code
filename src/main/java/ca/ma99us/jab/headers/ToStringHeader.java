@@ -1,6 +1,5 @@
 package ca.ma99us.jab.headers;
 
-import ca.ma99us.jab.JabCrypto;
 import ca.ma99us.jab.JabToString;
 import lombok.Data;
 

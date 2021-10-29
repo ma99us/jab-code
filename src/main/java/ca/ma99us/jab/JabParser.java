@@ -436,7 +436,7 @@ public class JabParser {
      * @param str payload to wrap
      * @return wrapped string
      */
-    public String wrap(String str) {
+    public static String wrap(String str) {
         return "[" + str + "]";
     }
 
@@ -445,7 +445,7 @@ public class JabParser {
      * @param str payload to unwrap
      * @return unwrapped string
      */
-    public String unwrap(String str) {
+    public static String unwrap(String str) {
         if (str.startsWith("[") && str.endsWith("]")) {
             return str.substring(1, str.length() - 1);
         }

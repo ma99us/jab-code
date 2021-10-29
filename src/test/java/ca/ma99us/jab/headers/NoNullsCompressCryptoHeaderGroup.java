@@ -1,6 +1,5 @@
 package ca.ma99us.jab.headers;
 
-import ca.ma99us.jab.headers.*;
 import ca.ma99us.jab.headers.groups.AbstractHeaderGroup;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
