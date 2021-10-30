@@ -6,7 +6,7 @@ import java.io.IOException;
 
 /**
  * Collection of headers applied in sequence
- * @param <P>
+ * @param <P> generic payload class
  */
 public abstract class AbstractHeaderGroup<P> implements JabHeader<P> {
 

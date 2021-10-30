@@ -91,6 +91,8 @@ public class JabParser {
      * Serializes POJO into a Jab string
      * @param header JabHeader(s) to apply to payload string portion
      * @param payload POJO java bean
+     * @param <H> generic header class
+     * @param <P> generic payload class
      * @return Jab string
      * @throws IOException in case of any failure
      */
@@ -118,6 +120,8 @@ public class JabParser {
      * Serializes POJO into a byte array
      * @param header JabHeader(s) to apply to payload string portion
      * @param payload POJO java bean
+     * @param <H> generic header class
+     * @param <P> generic payload class
      * @return Jab byte array (non human readable bytes)
      * @throws IOException in case of any failure
      */
@@ -149,6 +153,8 @@ public class JabParser {
      * Generates schema of the Jab serialization
      * @param header JabHeader(s) to apply to payload string portion
      * @param payload POJO java bean
+     * @param <H> generic header class
+     * @param <P> generic payload class
      * @return Jab string
      * @throws IOException in case of any failure
      */
@@ -192,6 +198,8 @@ public class JabParser {
      * @param barcode Jab string
      * @param headerClass JabHeader(s) class to apply to payload string portion
      * @param payloadClass POJO java bean class
+     * @param <H> generic header class
+     * @param <P> generic payload class
      * @return Jab string
      * @throws IOException in case of any failure
      */
@@ -463,6 +471,8 @@ public class JabParser {
          * Register a Jab Format - a pair of Header and Payload classes
          * @param headerClass header class
          * @param payloadClass POJO java bean class (payload)
+         * @param <H> generic header class
+         * @param <P> generic payload class
          * @return this
          */
         public synchronized <H extends JabHeader, P> Formats registerFormat(Class<H> headerClass, Class<P> payloadClass) {
@@ -481,9 +491,9 @@ public class JabParser {
         }
 
         /**
-         * Jab format - a pair of Header and Payload classes.
-         * @param <H>
-         * @param <P>
+         * Jab code format - a pair of Header and Payload classes.
+         * @param <H> generic header class
+         * @param <P> generic payload class
          */
         @Data
         @AllArgsConstructor

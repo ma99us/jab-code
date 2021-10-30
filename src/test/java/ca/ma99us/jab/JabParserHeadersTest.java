@@ -28,6 +28,15 @@ public class JabParserHeadersTest {
     }
 
     @Test
+    public void signatureHeaderTest() {
+        DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
+        SignatureHeader<DummyDTO> header = new SignatureHeader<DummyDTO>();
+        header.setSigner(new JabSigner().setKeySecrets("SecretSignerKey", "SomeSalt"));
+
+        barcodeTest(header, SignatureHeader.class, dto, DummyDTO.class, true);
+    }
+
+    @Test
     public void cryptoHeaderTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
         CryptoHeaderGroup<DummyDTO> header = new CryptoHeaderGroup<DummyDTO>();

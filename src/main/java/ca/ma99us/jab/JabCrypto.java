@@ -9,7 +9,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Simple platform-independent way to encrypt/decrypt strings.
+ * Simple platform-independent way to encrypt/decrypt byte arrays.
  */
 public class JabCrypto {
     private final String algorithm;
@@ -26,19 +26,6 @@ public class JabCrypto {
         this("Blowfish", "Blowfish/CBC/PKCS5Padding", 16, 8);   // default
     }
 
-    public JabCrypto setKeySecrets(String key, String salt) {
-        this.cryptoKey = new CryptoKey(key, salt);
-        return this;
-    }
-
-    /**
-     * Unique id of the crypto and it's key
-     * @return long integer id
-     */
-    public Long getCryptoId() {
-        return JabHasher.getGlobalHasher().hashString(this.algorithm + this.mode + (cryptoKey != null ? cryptoKey.getKeyWithSalt() : ""));
-    }
-
     /**
      * @param algorithm algorithm name
      * @param mode      algorithm mode
@@ -50,6 +37,23 @@ public class JabCrypto {
         this.mode = mode;
         this.keyLen = keyLen;
         this.ivLen = ivLen;
+    }
+
+    public JabCrypto setKeySecrets(String key, String salt) {
+        this.cryptoKey = new CryptoKey(key, salt);
+        return this;
+    }
+
+    /**
+     * Unique id of the crypto and it's key
+     * @return long integer id
+     */
+    public Long getCryptoId() {
+        if (cryptoKey == null) {
+            throw new IllegalArgumentException("Crypto key has to be set first");
+        }
+
+        return JabHasher.getGlobalHasher().hashString(this.algorithm + this.mode + cryptoKey.getKeyWithSalt());
     }
 
     /**

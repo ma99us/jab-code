@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  * Encrypts/decrypts payload bytes using default symmetrical cypher with a string Key
- * @param <P>
+ * @param <P> generic payload class
  */
 @Data
 public class CryptoHeader<P> extends AbstractHeader<P> {
