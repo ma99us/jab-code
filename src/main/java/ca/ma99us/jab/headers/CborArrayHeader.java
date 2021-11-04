@@ -5,6 +5,7 @@ import com.google.iot.cbor.CborArray;
 import com.google.iot.cbor.CborObject;
 import com.google.iot.cbor.CborParseException;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.json.JSONArray;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.nio.charset.StandardCharsets;
  * @see <a href="https://github.com/google/cbortree">CborTree</a>
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class CborArrayHeader<P> extends AbstractHeader<P> {
 
     // compress

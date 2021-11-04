@@ -3,6 +3,7 @@ package ca.ma99us.jab.headers;
 import ca.ma99us.jab.JabCrypto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.Map;
  * @param <P> generic payload class
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class CryptoHeader<P> extends AbstractHeader<P> {
     private Long keyId;
 
@@ -35,7 +37,7 @@ public class CryptoHeader<P> extends AbstractHeader<P> {
         }
 
         // populate key id
-        keyId = encrypt.getCryptoId();
+        keyId = encrypt.getKeyId();
     }
 
     @Override
@@ -68,7 +70,7 @@ public class CryptoHeader<P> extends AbstractHeader<P> {
         private final Map<Long, JabCrypto> keyIdCryptos = new HashMap<>();
 
         public Cryptos registerCrypto(JabCrypto crypto) {
-            keyIdCryptos.put(crypto.getCryptoId(), crypto);
+            keyIdCryptos.put(crypto.getKeyId(), crypto);
             return this;
         }
 

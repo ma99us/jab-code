@@ -2,6 +2,7 @@ package ca.ma99us.jab.headers;
 
 import ca.ma99us.jab.JabToString;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -11,6 +12,7 @@ import java.nio.charset.StandardCharsets;
  * This probably should be the last header in the recipe.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class ToStringHeader<P>  extends AbstractHeader<P> {
 
     @Override

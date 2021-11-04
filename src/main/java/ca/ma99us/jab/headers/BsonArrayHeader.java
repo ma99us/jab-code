@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.undercouch.bson4jackson.BsonFactory;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +16,7 @@ import java.util.List;
  * @see <a href="https://github.com/michel-kraemer/bson4jackson">BSON for Jackson</a>
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class BsonArrayHeader<P> extends AbstractHeader<P> {
 
     // compress

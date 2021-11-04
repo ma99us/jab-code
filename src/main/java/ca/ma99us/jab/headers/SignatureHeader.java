@@ -5,6 +5,7 @@ import ca.ma99us.jab.JabSigner;
 import ca.ma99us.jab.JabToString;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.Map;
  * @param <P> generic payload class
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class SignatureHeader<P> extends AbstractHeader<P> {
     private Long keyId;
     private String signature;
@@ -40,7 +42,7 @@ public class SignatureHeader<P> extends AbstractHeader<P> {
         }
 
         // populate key id
-        keyId = signer.getSignerId();
+        keyId = signer.getKeyId();
 
         // populate signature
         JabParser parser = new JabParser();
@@ -75,7 +77,7 @@ public class SignatureHeader<P> extends AbstractHeader<P> {
         private final Map<Long, JabSigner> keyIdSigners = new HashMap<>();
 
         public Signers registerSigner(JabSigner signer) {
-            keyIdSigners.put(signer.getSignerId(), signer);
+            keyIdSigners.put(signer.getKeyId(), signer);
             return this;
         }
 

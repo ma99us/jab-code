@@ -2,6 +2,7 @@ package ca.ma99us.jab.headers;
 
 import ca.ma99us.jab.JabParser;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -12,6 +13,7 @@ import java.util.regex.Pattern;
  * Remove/adds back 'null's from json array string to make payload bytes a bit shorter.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class NoNullsHeader<P> extends AbstractHeader<P> {
 
     /**

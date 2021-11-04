@@ -4,6 +4,7 @@ import ca.ma99us.jab.JabParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 import java.io.ByteArrayOutputStream;
@@ -16,6 +17,7 @@ import java.util.List;
  * @see <a href="https://github.com/msgpack/msgpack-java">MessagePack</a>
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class MessagePackHeader<P> extends AbstractHeader<P> {
 
     // compress

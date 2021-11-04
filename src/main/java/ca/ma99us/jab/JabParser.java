@@ -516,7 +516,7 @@ public class JabParser {
                     sb.append(headerClass.getSimpleName());
                 }
                 sb.append(payloadClass.getSimpleName());
-                return JabHasher.getGlobalHasher().hashString(sb.toString());
+                return JabHasher.getGlobalHasher().hash(sb.toString());
             }
         }
     }

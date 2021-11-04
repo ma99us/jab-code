@@ -1,6 +1,7 @@
 package ca.ma99us.jab.headers;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.zip.InflaterOutputStream;
  * Compresses/uncompresses payload bytes using default ZIP algorithm
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class CompressHeader<P> extends AbstractHeader<P> {
 
     // compress

@@ -3,15 +3,16 @@ package ca.ma99us.jab;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 /**
- * Simple platform-independent way to create hashes from strings.
+ * Simple platform-independent way to create hashes for any data.
  */
 public class JabHasher {
-    private final String ALGORITHM = "SHA-256"; // default
-    private final long MAX_SAFE_INTEGER = 9007199254740991L;      // 2^53 - 1 is the maximum "safe" integer for json/javascript
+    private final String ALGORITHM = "SHA-256";  // default
+    private final long MAX_SAFE_INTEGER = 9007199254740991L;  // 2^53 - 1 is the maximum "safe" integer for json/javascript
 
     @Getter
     @Setter
@@ -23,14 +24,46 @@ public class JabHasher {
     }
 
     /**
+     * Calculate hash code of the given array of byte arrays
+     * @param datas array of byte arrays
+     * @return long number hash
+     */
+    public long hash(byte[]... datas) {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        try {
+            for (byte[] data : datas) {
+                os.write(data);
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Hash Error", e);
+        }
+
+        return hash(os.toByteArray());
+    }
+
+    /**
      * Calculate hash code of the given string
+     *
      * @param data string
      * @return long number hash
      */
-    public long hashString(String data) {
+    public long hash(String data) {
+        if (data == null) {
+            throw new IllegalArgumentException("Hash Error; data can not be null");
+        }
+        return hash(data.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Calculate hash code of the given bytes
+     *
+     * @param data bytes array
+     * @return long number hash
+     */
+    public long hash(byte[] data) {
         try {
             MessageDigest md = MessageDigest.getInstance(ALGORITHM);
-            byte[] digest = md.digest(data.getBytes(StandardCharsets.UTF_8));
+            byte[] digest = md.digest(data);
 
             // shrink it to 8 bytes
             digest = wrapBytes(digest, 8);
@@ -50,8 +83,9 @@ public class JabHasher {
 
     /**
      * Wrap byte array onto itself to create different length byte array as a result
+     *
      * @param sBytes source byte array
-     * @param rLen length of desired byte array
+     * @param rLen   length of desired byte array
      * @return new byte array of the given length
      */
     public byte[] wrapBytes(byte[] sBytes, int rLen) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.BasicDBList;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.bson.BasicBSONDecoder;
 import org.bson.BasicBSONEncoder;
 import org.bson.BasicBSONObject;
@@ -19,6 +20,7 @@ import java.util.List;
  * @see <a href="https://www.mongodb.com/basics/bson">MongoDB BSON</a>
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class BsonMongoHeader<P> extends AbstractHeader<P> {
 
     // compress
