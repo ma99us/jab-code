@@ -74,6 +74,10 @@ public class CryptoHeader<P> extends AbstractHeader<P> {
             return this;
         }
 
+        public JabCrypto unregister(JabCrypto crypto) {
+            return keyIdCryptos.remove(crypto.getKeyId());
+        }
+
         public synchronized JabCrypto findCrypto(Long id) {
             return id != null ? keyIdCryptos.get(id) : null;
         }

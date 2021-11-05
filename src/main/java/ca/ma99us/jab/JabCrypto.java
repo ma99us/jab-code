@@ -2,6 +2,7 @@ package ca.ma99us.jab;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
+import java.security.Key;
 
 /**
  * Simple platform-independent way to encrypt/decrypt byte arrays.
@@ -36,13 +37,22 @@ public class JabCrypto extends AbstractSecret<JabCrypto> {
      * @return encrypted bytes
      */
     public byte[] encrypt(byte[] value) {
+        if (privateKey == null) {
+            throw new NullPointerException("Crypto key has to be set first");
+        }
+
+        return encrypt(value, privateKey);
+    }
+
+    protected byte[] encrypt(byte[] value, Key key) {
         try {
-            if (key == null) {
-                throw new NullPointerException("Crypto key has to be set first");
+            Cipher cipher = providerName != null ? Cipher.getInstance(mode, providerName) : Cipher.getInstance(mode);
+            if (ivLen > 0) {
+                byte[] ivBytes = wrapBytes(key.getEncoded(), ivLen);
+                cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(ivBytes));
+            } else {
+                cipher.init(Cipher.ENCRYPT_MODE, key);
             }
-            Cipher cipher = Cipher.getInstance(mode);
-            byte[] ivBytes = wrapBytes(key.getEncoded(), ivLen);
-            cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(ivBytes));
             return cipher.doFinal(value);
         } catch (Exception ex) {
             throw new IllegalArgumentException("Encryption Error", ex);
@@ -56,16 +66,25 @@ public class JabCrypto extends AbstractSecret<JabCrypto> {
      * @return decrypted bytes
      */
     public byte[] decrypt(byte[] encrypted) {
+        if (privateKey == null) {
+            throw new NullPointerException("Crypto key has to be set first");
+        }
+
+        return decrypt(encrypted, privateKey);
+    }
+
+    protected byte[] decrypt(byte[] encrypted, Key key) {
         try {
-            if (key == null) {
-                throw new NullPointerException("Crypto key has to be set first");
+            Cipher cipher = providerName != null ? Cipher.getInstance(mode, providerName) : Cipher.getInstance(mode);
+            if (ivLen > 0) {
+                byte[] ivBytes = wrapBytes(key.getEncoded(), ivLen);
+                cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(ivBytes));
+            } else {
+                cipher.init(Cipher.DECRYPT_MODE, key);
             }
-            Cipher cipher = Cipher.getInstance(mode);
-            byte[] ivBytes = wrapBytes(key.getEncoded(), ivLen);
-            cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(ivBytes));
             return cipher.doFinal(encrypted);
         } catch (Exception ex) {
-            throw new IllegalArgumentException("Encryption Error", ex);
+            throw new IllegalArgumentException("Decryption Error", ex);
         }
     }
 }

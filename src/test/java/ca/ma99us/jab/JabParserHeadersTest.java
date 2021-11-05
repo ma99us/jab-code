@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 
 public class JabParserHeadersTest {
@@ -31,7 +32,7 @@ public class JabParserHeadersTest {
     public void signatureHeaderTest() {
         DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
         SignatureHeader<DummyDTO> header = new SignatureHeader<DummyDTO>();
-        header.setSigner(new JabSigner().setKeySecrets("SecretSignerKey", "SomeSalt"));
+        header.setSigner(new JabSigner().setSecretKey("SecretSignerKey", "SomeSalt"));
 
         barcodeTest(header, SignatureHeader.class, dto, DummyDTO.class, true);
     }
@@ -52,31 +53,30 @@ public class JabParserHeadersTest {
 
         System.out.println("\nNoNulls, then Crypto:");
         // set the key
-        header.getCryptoHeader().setCrypto(new JabCrypto().setKeySecrets("SomeSuperSecretKey", "SomeSalt"));
+        header.getCryptoHeader().setCrypto(new JabCrypto().setSecretKey("SomeSuperSecretKey", "SomeSalt"));
 
         barcodeTest(header, CryptoHeaderGroup.class, dto, DummyDTO.class, true);
 
         // compressed version
         System.out.println("\nNoNulls, then Compress, then Crypto:");
         NoNullsCompressCryptoHeaderGroup<DummyDTO> header1 = new NoNullsCompressCryptoHeaderGroup<DummyDTO>();
-        header1.getCryptoHeader().setCrypto(new JabCrypto().setKeySecrets("SomeSuperSecretKey", "SomeSalt"));
+        header1.getCryptoHeader().setCrypto(new JabCrypto().setRandomKey());
 
         barcodeTest(header1, NoNullsCompressCryptoHeaderGroup.class, dto, DummyDTO.class, true);
 
         // compressed cbor version
         System.out.println("\nCbor, then Compress, then Crypto:");
         CborCompressCryptoHeaderGroup<DummyDTO> header2 = new CborCompressCryptoHeaderGroup<DummyDTO>();
-        header2.getCryptoHeader().setCrypto(new JabCrypto().setKeySecrets("SomeSuperSecretKey", "SomeSalt"));
+        header2.getCryptoHeader().setCrypto(new JabCrypto().setSecretKey("SomeSuperSecretKey", "SomeSalt"));
 
         barcodeTest(header2, CborCompressCryptoHeaderGroup.class, dto, DummyDTO.class, true);
 
         // compressed cbor version
         System.out.println("\nCbor, then Crypto then Compressed:");
         CborCryptoCompressHeaderGroup<DummyDTO> header3 = new CborCryptoCompressHeaderGroup<DummyDTO>();
-        header3.getCryptoHeader().setCrypto(new JabCrypto().setKeySecrets("SomeSuperSecretKey", "SomeSalt"));
+        header3.getCryptoHeader().setCrypto(new JabCrypto().setRandomKey());
 
         barcodeTest(header3, CborCryptoCompressHeaderGroup.class, dto, DummyDTO.class, true);
-
     }
 
     @Test
@@ -119,6 +119,148 @@ public class JabParserHeadersTest {
         MessagePackHeaderGroup<DummyDTO> header = new MessagePackHeaderGroup<DummyDTO>();
 
         barcodeTest(header, MessagePackHeaderGroup.class, dto, DummyDTO.class, true);
+    }
+
+    @Test
+    public void cryptoKeysFromStringSecretTest() {
+        DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
+
+        JabParser jabParser = new JabParser();
+        JabCrypto encrypt = new JabCrypto().setSecretKey("someCoolSecretKey", null);
+        byte[] keyBytes = encrypt.getPrivateKeyBytes();
+        System.out.println("key bytes (" + keyBytes.length * 8 + " bits): " + Arrays.toString(keyBytes));
+
+        // generate barcode
+        String barcode = null;
+        try {
+            CryptoHeaderGroup<DummyDTO> header = new CryptoHeaderGroup<DummyDTO>();
+            header.getCryptoHeader().setCrypto(encrypt);
+            barcode = jabParser.objectToJab(header, dto);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+        Assert.assertNotNull(barcode);
+
+        // unregister old one
+        JabCrypto oldCrypto = CryptoHeader.getCryptos().unregister(encrypt);
+        Assert.assertNotNull(oldCrypto);
+
+        // register new key from the key bytes
+        JabCrypto decrypt = new JabCrypto().setSecretKey("someCoolSecretKey", null);
+        CryptoHeader.getCryptos().registerCrypto(decrypt);
+
+        // parse it back
+        DummyDTO res = null;
+        try {
+            res = jabParser.jabToObject(barcode, CryptoHeaderGroup.class, DummyDTO.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+        Assert.assertNotNull(res);
+        Assert.assertEquals(dto, res);
+
+        // unregister old one
+        oldCrypto = CryptoHeader.getCryptos().unregister(decrypt);
+        Assert.assertNotNull(oldCrypto);
+
+        // register new key from the key bytes
+        JabCrypto wrongDecrypt = new JabCrypto().setSecretKey("someWrongSecretKey", null);
+        CryptoHeader.getCryptos().registerCrypto(wrongDecrypt);
+
+        // parse it back
+        res = null;
+        try {
+            res = jabParser.jabToObject(barcode, CryptoHeaderGroup.class, DummyDTO.class);
+            Assert.fail();
+        } catch (IOException e) {
+            System.out.println("Expected exception: " + e.getMessage());
+        }
+        Assert.assertNull(res);
+    }
+
+    @Test
+    public void cryptoKeysFromBytesTest() {
+        DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
+
+        JabParser jabParser = new JabParser();
+        JabCrypto encrypt = new JabCrypto().setRandomKey();
+        byte[] keyBytes = encrypt.getPrivateKeyBytes();
+        System.out.println("key bytes (" + keyBytes.length * 8 + " bits): " + Arrays.toString(keyBytes));
+
+        // generate barcode
+        String barcode = null;
+        try {
+            CryptoHeaderGroup<DummyDTO> header = new CryptoHeaderGroup<DummyDTO>();
+            header.getCryptoHeader().setCrypto(encrypt);
+            barcode = jabParser.objectToJab(header, dto);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+        Assert.assertNotNull(barcode);
+
+        // unregister old one
+        JabCrypto oldCrypto = CryptoHeader.getCryptos().unregister(encrypt);
+        Assert.assertNotNull(oldCrypto);
+
+        // register new key from the key bytes
+        CryptoHeader.getCryptos().registerCrypto(new JabCrypto().setPrivateKeyBytes(keyBytes));
+
+        // parse it back
+        DummyDTO res = null;
+        try {
+            res = jabParser.jabToObject(barcode, CryptoHeaderGroup.class, DummyDTO.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+        Assert.assertNotNull(res);
+        Assert.assertEquals(dto, res);
+    }
+
+    @Test
+    public void cryptoAsyncKeysTest() {
+        DummyDTO dto = DummyDTO.makeDummyDTO(true, true);
+
+        JabParser jabParser = new JabParser();
+        JabAsyncCrypto encrypt = new JabAsyncCrypto().setRandomKey();
+        byte[] publicKeyBytes = encrypt.getPublicKeyBytes();
+        byte[] keyBytes = encrypt.getPrivateKeyBytes();
+        System.out.println("key bytes (" + keyBytes.length * 8 + " bits): " + Arrays.toString(keyBytes));
+
+        // generate barcode
+        String barcode = null;
+        try {
+            CryptoHeaderGroup<DummyDTO> header = new CryptoHeaderGroup<DummyDTO>();
+            header.getCryptoHeader().setCrypto(encrypt);
+            barcode = jabParser.objectToJab(header, dto);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+        Assert.assertNotNull(barcode);
+        System.out.println("barcode: (" + barcode.length() + " bytes): \"" + barcode + "\"");
+
+        // unregister old one
+        JabCrypto oldCrypto = CryptoHeader.getCryptos().unregister(encrypt);
+        Assert.assertNotNull(oldCrypto);
+
+        // register new key from the key bytes
+        JabAsyncCrypto decrypt = new JabAsyncCrypto().setPrivateKeyBytes(keyBytes).setPublicKeyBytes(publicKeyBytes);
+        CryptoHeader.getCryptos().registerCrypto(decrypt);
+
+        // parse it back
+        DummyDTO res = null;
+        try {
+            res = jabParser.jabToObject(barcode, CryptoHeaderGroup.class, DummyDTO.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+        Assert.assertNotNull(res);
+        Assert.assertEquals(dto, res);
     }
 
     private <H extends JabHeader<P>, P> P barcodeTest(H header, Class<H> hClass, P dto, Class<P> pClass, boolean withValidation) {

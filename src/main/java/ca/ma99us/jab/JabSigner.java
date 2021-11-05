@@ -31,11 +31,11 @@ public class JabSigner extends AbstractSecret<JabSigner> {
      */
     public byte[] sign(byte[] data) {
         try {
-            if (key == null) {
+            if (privateKey == null) {
                 throw new NullPointerException("Crypto key has to be set first");
             }
             Mac mac = Mac.getInstance(keyAlgorithm);
-            mac.init(key);
+            mac.init(privateKey);
             return mac.doFinal(data);
         } catch (Exception ex) {
             throw new IllegalArgumentException("Signing Error", ex);
@@ -51,11 +51,11 @@ public class JabSigner extends AbstractSecret<JabSigner> {
      */
     public boolean verify(byte[] data, byte[] signature) {
         try {
-            if (key == null) {
+            if (privateKey == null) {
                 throw new NullPointerException("Crypto key has to be set first");
             }
             Mac mac = Mac.getInstance(keyAlgorithm);
-            mac.init(key);
+            mac.init(privateKey);
             byte[] newSignature = mac.doFinal(data);
             return Arrays.equals(newSignature, signature);
         } catch (Exception ex) {
