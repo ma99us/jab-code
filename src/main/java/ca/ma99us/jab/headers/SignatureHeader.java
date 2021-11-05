@@ -25,13 +25,14 @@ public class SignatureHeader<P> extends AbstractHeader<P> {
     private String signature;
 
     @Getter
-    private final static Signers signers = new Signers();
+    private final static Verifiers verifiers = new Verifiers();
+
     @JsonIgnore
     private JabSigner signer;
 
     public SignatureHeader<P> setSigner(JabSigner signer) {
         this.signer = signer;
-        signers.registerSigner(this.signer);   // also register globally for verification
+        verifiers.register(this.signer);   // also register globally for verification
         return this;
     }
 
@@ -54,7 +55,7 @@ public class SignatureHeader<P> extends AbstractHeader<P> {
     @Override
     public void validate(P dto) throws IOException {
         // validate the key id first
-        JabSigner verifier = signers.findSigner(keyId);
+        JabSigner verifier = verifiers.find(keyId);
         if (verifier == null) {
             throw new IOException("Not registered key id: " + keyId);
         }
@@ -73,15 +74,19 @@ public class SignatureHeader<P> extends AbstractHeader<P> {
      * Simple collection of registered crypo keys and salts.
      * Finds crypto key from the barcode header key id.
      */
-    public static class Signers {
+    public static class Verifiers {
         private final Map<Long, JabSigner> keyIdSigners = new HashMap<>();
 
-        public Signers registerSigner(JabSigner signer) {
+        public Verifiers register(JabSigner signer) {
             keyIdSigners.put(signer.getKeyId(), signer);
             return this;
         }
 
-        public synchronized JabSigner findSigner(Long id) {
+        public JabSigner unregister(JabSigner signer) {
+            return keyIdSigners.remove(signer.getKeyId());
+        }
+
+        public synchronized JabSigner find(Long id) {
             return id != null ? keyIdSigners.get(id) : null;
         }
     }

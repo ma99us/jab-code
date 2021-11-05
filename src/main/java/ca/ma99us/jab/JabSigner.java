@@ -9,18 +9,18 @@ import java.util.Arrays;
 public class JabSigner extends AbstractSecret<JabSigner> {
 
     /**
-     * Default Blowfish algorithm.
+     * Default algorithm.
      */
     public JabSigner() {
         this("HmacSHA256", 32);   // default
     }
 
     /**
-     * @param algorithm algorithm name
+     * @param keyAlgorithm algorithm name
      * @param keyLen    key length in bytes
      */
-    public JabSigner(String algorithm, int keyLen) {
-        super(algorithm, keyLen);
+    public JabSigner(String keyAlgorithm, int keyLen) {
+        super(keyAlgorithm, keyLen);
     }
 
     /**

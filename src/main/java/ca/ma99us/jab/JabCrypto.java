@@ -12,20 +12,20 @@ public class JabCrypto extends AbstractSecret<JabCrypto> {
     protected final int ivLen;
 
     /**
-     * Default Blowfish algorithm.
+     * Default algorithm.
      */
     public JabCrypto() {
         this("Blowfish", "Blowfish/CBC/PKCS5Padding", 16, 8);   // default
     }
 
     /**
-     * @param algorithm algorithm name
+     * @param keyAlgorithm algorithm name
      * @param mode      algorithm mode
      * @param keyLen    key length in bytes
      * @param ivLen     iV length in bytes
      */
-    public JabCrypto(String algorithm, String mode, int keyLen, int ivLen) {
-        super(algorithm, keyLen);
+    public JabCrypto(String keyAlgorithm, String mode, int keyLen, int ivLen) {
+        super(keyAlgorithm, keyLen);
         this.mode = mode;
         this.ivLen = ivLen;
     }

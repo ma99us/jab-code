@@ -1,6 +1,5 @@
 package ca.ma99us.jab;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -9,35 +8,26 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 /**
- * Simple platform-independent way to encrypt/decrypt byte arrays.
+ * Encrypt/decrypt byte arrays with asymmetrical keys.
  */
 public class JabAsyncCrypto extends JabCrypto {
     protected Key publicKey;
 
     /**
-     * Default Blowfish algorithm.
+     * Default algorithm.
      */
     public JabAsyncCrypto() {
         this("RSA", "RSA/ECB/PKCS1Padding", 512, 0);   // default
     }
 
     /**
-     * @param algorithm algorithm name
+     * @param keyAlgorithm algorithm name
      * @param mode      algorithm mode
      * @param keyLen    key length in bytes
      * @param ivLen     iV length in bytes
      */
-    public JabAsyncCrypto(String algorithm, String mode, int keyLen, int ivLen) {
-        super(algorithm, mode, keyLen, ivLen);
-    }
-
-    @Override
-    public Long getKeyId() {
-        if (publicKey == null) {
-            throw new IllegalStateException("Public key has to be set first");
-        }
-
-        return JabHasher.getGlobalHasher().hash(this.keyAlgorithm.getBytes(StandardCharsets.UTF_8), publicKey.getEncoded());
+    public JabAsyncCrypto(String keyAlgorithm, String mode, int keyLen, int ivLen) {
+        super(keyAlgorithm, mode, keyLen, ivLen);
     }
 
     @Override
@@ -48,8 +38,8 @@ public class JabAsyncCrypto extends JabCrypto {
     @Override
     public JabAsyncCrypto setRandomKey() {
         try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(keyAlgorithm);
-            keyGen.initialize(keyLen * 8, securityProvider.getSecureRandom());
+            KeyPairGenerator keyGen = providerName != null ? KeyPairGenerator.getInstance(keyAlgorithm, providerName) : KeyPairGenerator.getInstance(keyAlgorithm);
+            keyGen.initialize(keyLen * 8, cryptoConfig.getSecureRandom());
             KeyPair keyPair = keyGen.generateKeyPair();
             privateKey = keyPair.getPrivate();
             publicKey = keyPair.getPublic();
@@ -67,7 +57,8 @@ public class JabAsyncCrypto extends JabCrypto {
     public JabAsyncCrypto setPublicKeyBytes(byte[] keyBytes) {
         try {
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
-            publicKey = KeyFactory.getInstance(keyAlgorithm).generatePublic(keySpec);
+            KeyFactory keyFactory = providerName != null ? KeyFactory.getInstance(keyAlgorithm, providerName) : KeyFactory.getInstance(keyAlgorithm);
+            publicKey = keyFactory.generatePublic(keySpec);
         } catch (Exception ex) {
             throw new IllegalStateException("Error setting public key from bytes", ex);
         }
@@ -79,7 +70,8 @@ public class JabAsyncCrypto extends JabCrypto {
     public JabAsyncCrypto setPrivateKeyBytes(byte[] keyBytes) {
         try {
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-            privateKey = KeyFactory.getInstance(keyAlgorithm).generatePrivate(keySpec);
+            KeyFactory keyFactory = providerName != null ? KeyFactory.getInstance(keyAlgorithm, providerName) : KeyFactory.getInstance(keyAlgorithm);
+            privateKey = keyFactory.generatePrivate(keySpec);
         } catch (Exception ex) {
             throw new IllegalStateException("Error setting private key from bytes", ex);
         }

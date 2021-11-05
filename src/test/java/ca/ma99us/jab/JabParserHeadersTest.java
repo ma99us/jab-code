@@ -143,12 +143,12 @@ public class JabParserHeadersTest {
         Assert.assertNotNull(barcode);
 
         // unregister old one
-        JabCrypto oldCrypto = CryptoHeader.getCryptos().unregister(encrypt);
+        JabCrypto oldCrypto = CryptoHeader.getDecryptors().unregister(encrypt);
         Assert.assertNotNull(oldCrypto);
 
         // register new key from the key bytes
         JabCrypto decrypt = new JabCrypto().setSecretKey("someCoolSecretKey", null);
-        CryptoHeader.getCryptos().registerCrypto(decrypt);
+        CryptoHeader.getDecryptors().register(decrypt);
 
         // parse it back
         DummyDTO res = null;
@@ -162,12 +162,12 @@ public class JabParserHeadersTest {
         Assert.assertEquals(dto, res);
 
         // unregister old one
-        oldCrypto = CryptoHeader.getCryptos().unregister(decrypt);
+        oldCrypto = CryptoHeader.getDecryptors().unregister(decrypt);
         Assert.assertNotNull(oldCrypto);
 
         // register new key from the key bytes
         JabCrypto wrongDecrypt = new JabCrypto().setSecretKey("someWrongSecretKey", null);
-        CryptoHeader.getCryptos().registerCrypto(wrongDecrypt);
+        CryptoHeader.getDecryptors().register(wrongDecrypt);
 
         // parse it back
         res = null;
@@ -202,11 +202,11 @@ public class JabParserHeadersTest {
         Assert.assertNotNull(barcode);
 
         // unregister old one
-        JabCrypto oldCrypto = CryptoHeader.getCryptos().unregister(encrypt);
+        JabCrypto oldCrypto = CryptoHeader.getDecryptors().unregister(encrypt);
         Assert.assertNotNull(oldCrypto);
 
-        // register new key from the key bytes
-        CryptoHeader.getCryptos().registerCrypto(new JabCrypto().setPrivateKeyBytes(keyBytes));
+        // register new decrypt key from the key bytes
+        CryptoHeader.getDecryptors().register(new JabCrypto().setPrivateKeyBytes(keyBytes));
 
         // parse it back
         DummyDTO res = null;
@@ -226,7 +226,6 @@ public class JabParserHeadersTest {
 
         JabParser jabParser = new JabParser();
         JabAsyncCrypto encrypt = new JabAsyncCrypto().setRandomKey();
-        byte[] publicKeyBytes = encrypt.getPublicKeyBytes();
         byte[] keyBytes = encrypt.getPrivateKeyBytes();
         System.out.println("key bytes (" + keyBytes.length * 8 + " bits): " + Arrays.toString(keyBytes));
 
@@ -244,12 +243,12 @@ public class JabParserHeadersTest {
         System.out.println("barcode: (" + barcode.length() + " bytes): \"" + barcode + "\"");
 
         // unregister old one
-        JabCrypto oldCrypto = CryptoHeader.getCryptos().unregister(encrypt);
+        JabCrypto oldCrypto = CryptoHeader.getDecryptors().unregister(encrypt);
         Assert.assertNotNull(oldCrypto);
 
-        // register new key from the key bytes
-        JabAsyncCrypto decrypt = new JabAsyncCrypto().setPrivateKeyBytes(keyBytes).setPublicKeyBytes(publicKeyBytes);
-        CryptoHeader.getCryptos().registerCrypto(decrypt);
+        // register new decrypt key from the key bytes
+        JabAsyncCrypto decrypt = new JabAsyncCrypto().setPrivateKeyBytes(keyBytes);
+        CryptoHeader.getDecryptors().register(decrypt);
 
         // parse it back
         DummyDTO res = null;

@@ -20,13 +20,14 @@ public class CryptoHeader<P> extends AbstractHeader<P> {
     private Long keyId;
 
     @Getter
-    private final static Cryptos cryptos = new Cryptos();
+    private final static Decryptors decryptors = new Decryptors();
+
     @JsonIgnore
     private JabCrypto encrypt;
 
     public CryptoHeader<P> setCrypto(JabCrypto encrypt) {
         this.encrypt = encrypt;
-        cryptos.registerCrypto(this.encrypt);   // also register globally for decryption
+        decryptors.register(this.encrypt);   // also register globally for decryption
         return this;
     }
 
@@ -53,7 +54,7 @@ public class CryptoHeader<P> extends AbstractHeader<P> {
     @Override
     public byte[] deobfuscate(byte[] payload) throws IOException {
         // validate the key id first
-        JabCrypto decrypt = cryptos.findCrypto(keyId);
+        JabCrypto decrypt = decryptors.find(keyId);
         if (decrypt == null) {
             throw new IOException("Not registered key id: " + keyId);
         }
@@ -66,10 +67,10 @@ public class CryptoHeader<P> extends AbstractHeader<P> {
      * Simple collection of registered crypo keys and salts.
      * Finds crypto key from the barcode header key id.
      */
-    public static class Cryptos {
+    public static class Decryptors {
         private final Map<Long, JabCrypto> keyIdCryptos = new HashMap<>();
 
-        public Cryptos registerCrypto(JabCrypto crypto) {
+        public Decryptors register(JabCrypto crypto) {
             keyIdCryptos.put(crypto.getKeyId(), crypto);
             return this;
         }
@@ -78,7 +79,7 @@ public class CryptoHeader<P> extends AbstractHeader<P> {
             return keyIdCryptos.remove(crypto.getKeyId());
         }
 
-        public synchronized JabCrypto findCrypto(Long id) {
+        public synchronized JabCrypto find(Long id) {
             return id != null ? keyIdCryptos.get(id) : null;
         }
     }

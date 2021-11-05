@@ -3,8 +3,10 @@ package ca.ma99us.jab.headers;
 import ca.ma99us.jab.headers.groups.AbstractHeaderGroup;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class CborCompressCryptoHeaderGroup<P> extends AbstractHeaderGroup<P> {
     private final ChecksumHeader<P> checksumHeader = new ChecksumHeader<P>();
     @JsonIgnore
